@@ -7,10 +7,13 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import constant.ErrorNum;
 import constant.TokenType;
+import system.MyException;
 import system.Node;
 import system.Node.NODE_TYPE;
 import system.ReturnClass;
+import system.ThrowMyException;
 import system.Word;
 import util.Formaluetree;
 import util.ListUtil;
@@ -41,11 +44,15 @@ public class GrammerAnalysis {
 	 * @return 转换后的词
 	 */
 	private Word rc2Word(ReturnClass rc) {
+		if(rc == null) {
+			return null;
+		}
 		Word word = new Word();
 		word.setType(rc.type);
 		word.setValue(rc.value);
 		word.setLineNum(wordAnalysis.getLineNum());
 		word.setPosition(wordAnalysis.getCc());
+		word.setStartLocation(word.getPosition() - word.getValue().length());
 		return word;
 	}
 
@@ -70,13 +77,44 @@ public class GrammerAnalysis {
 		Node root = new Node();
 		root.setType(Node.NODE_TYPE.PROGRAM);
 		Word beginWord = nextWord();
-		
-		switch (beginWord.getType()) {
-		// 遇到左括号
-		case LEFT_CURLY_BRACES:
-			root.addLink(oneBlock());
-			break;
-		}
+
+		boolean flag = false; // 是否遇到非注释代码
+
+		out: do {
+
+			if (flag || beginWord == null) {
+				break out;
+			}
+
+			switch (beginWord.getType()) {
+			// 遇到左括号
+			case LEFT_CURLY_BRACES:
+				root.addLink(oneBlock());
+				flag = true;
+				break;
+			case STRING:
+			case INT:
+			case REAL:
+			case IDENTIFIER:
+			case READ:
+			case WRITE:
+			case IF:
+			case WHILE:
+				root.addLink(oneSentence(beginWord));
+				flag = true;
+				break;
+			case DIVISION:
+				root.addLink(oneComment());
+				break;
+			default:
+				ThrowMyException.throwMyException(beginWord,
+						ErrorNum.ILLEGAL_PRO_START);
+			}
+			
+			beginWord = nextWord();
+
+		} while (true);
+
 		return root;
 	}
 
@@ -109,8 +147,8 @@ public class GrammerAnalysis {
 			case RIGHT_CURLY_BRACES:
 				break out;
 			default:
-				// 报错
-				break;
+				ThrowMyException.throwMyException(word,
+						ErrorNum.ILLEGAL_SENTENCE_START);
 			}
 			word = nextWord();
 		}
@@ -134,7 +172,8 @@ public class GrammerAnalysis {
 			node = oneInput();
 			Word word = nextWord();
 			if (word.getType() != TokenType.SEMICOLON) {
-				// 报错
+				ThrowMyException.throwMyException(word,
+						ErrorNum.EXPECTED_SEMICOLON);
 			}
 			break;
 		case WRITE:
@@ -152,8 +191,8 @@ public class GrammerAnalysis {
 			node.setValue(TokenType.SEMICOLON.toString());
 			break;
 		default:
-			// 报错
-			break;
+			ThrowMyException.throwMyException(preWord,
+					ErrorNum.ILLEGAL_SENTENCE_START);
 		}
 		return node;
 	}
@@ -173,8 +212,9 @@ public class GrammerAnalysis {
 			node = oneBlockComment();
 			break;
 		default:
-			// 报错
-			break;
+			System.out.println(word.getType() + " " + word.getValue());
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_DIV_OR_MUL);
 		}
 
 		return node;
@@ -197,9 +237,10 @@ public class GrammerAnalysis {
 		Node node = new Node();
 		node.setType(Node.NODE_TYPE.COMMENT);
 		StringBuffer sb = new StringBuffer();
-		char ch = wordAnalysis.getch();
+		
 		int state = 0;
 		while (true) {
+			char ch = wordAnalysis.getch();
 			if (ch == TokenType.MULTI.toString().charAt(0)) {
 				state = 1;
 				continue;
@@ -237,8 +278,8 @@ public class GrammerAnalysis {
 			node = assignWithoutType(preWord);
 			break;
 		default:
-			// 报错
-			break;
+			ThrowMyException.throwMyException(preWord,
+					ErrorNum.ILLEGAL_SENTENCE_START);
 		}
 		return node;
 	}
@@ -268,12 +309,13 @@ public class GrammerAnalysis {
 							preWord.getValue() + "[]"));
 					break;
 				default:
-					// 报错
-					break;
+					ThrowMyException.throwMyException(preWord,
+							ErrorNum.ILLEGAL_SENTENCE_START);
 				}
 				word = nextWord();
 			} else {
-				// 报错
+				ThrowMyException.throwMyException(word,
+						ErrorNum.EXPECTED_RIGHT_MEDIUM_BRACKET);
 			}
 		} else {
 			switch (preWord.getType()) {
@@ -287,13 +329,14 @@ public class GrammerAnalysis {
 				node.addLink(new Node(NODE_TYPE.REAL, preWord.getValue()));
 				break;
 			default:
-				// 报错
-				break;
+				ThrowMyException.throwMyException(preWord,
+						ErrorNum.ILLEGAL_SENTENCE_START);
 			}
 		}
 
 		if (word.getType() != TokenType.IDENTIFIER) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_IDENTIFIER);
 		}
 
 		node.addLink(new Node(NODE_TYPE.IDENTIFIER, word.getValue()));
@@ -306,12 +349,14 @@ public class GrammerAnalysis {
 			node.addLink(new Node(NODE_TYPE.ASSIGN, word.getValue()));
 			assignCommon(node);
 		} else {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_SEMI_OR_ASSIGN);
 		}
 
 		word = nextWord();
 		if (word.getType() != TokenType.SEMICOLON) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_SEMICOLON);
 		}
 
 		return node;
@@ -338,10 +383,14 @@ public class GrammerAnalysis {
 							preWord.getValue() + "[" + index + "]"));
 					word = nextWord();
 				} else {
-					// 报错
+					String errorMessage = ErrorNum.EXPECTED_RIGHT_MEDIUM_BRACKET
+							.toString() + " Line:" + word.getLineNum()
+							+ " Position:" + word.getStartLocation();
+					throw new MyException(errorMessage);
 				}
 			} else {
-				// 报错
+				ThrowMyException.throwMyException(word,
+						ErrorNum.EXPECTED_INT_VAL);
 			}
 		} else {
 			node.addLink(new Node(NODE_TYPE.IDENTIFIER, preWord.getValue()));
@@ -351,12 +400,13 @@ public class GrammerAnalysis {
 			node.addLink(new Node(NODE_TYPE.ASSIGN, word.getValue()));
 			assignCommon(node);
 		} else {
-			// 报错
+			ThrowMyException.throwMyException(word, ErrorNum.EXPECTED_ASSIGN);
 		}
 
 		word = nextWord();
 		if (word.getType() != TokenType.SEMICOLON) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_SEMICOLON);
 		}
 
 		return node;
@@ -390,8 +440,7 @@ public class GrammerAnalysis {
 			node.addLink(oneArithmetic(word));
 			break;
 		default:
-			// 报错
-			break;
+			ThrowMyException.throwMyException(word, ErrorNum.ILLEGAL_RIGHT_VAL);
 		}
 	}
 
@@ -403,7 +452,8 @@ public class GrammerAnalysis {
 		Node node = new Node(NODE_TYPE.INPUT);
 
 		if (word.getType() != TokenType.LEFT_BRACKET) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_LEFT_BRACKET);
 		}
 		word = nextWord();
 		switch (word.getType()) {
@@ -415,14 +465,16 @@ public class GrammerAnalysis {
 			break;
 		case REAL:
 			node.setValue("A real from input");
-		default:
-			// 报错
 			break;
+		default:
+			ThrowMyException.throwMyException(word,
+					ErrorNum.ILLEGAL_TYPE_FOR_INPUT);
 		}
 
 		word = nextWord();
 		if (word.getType() != TokenType.RIGHT_BRACKET) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_RIGHT_BRACKET);
 		}
 
 		return node;
@@ -436,7 +488,8 @@ public class GrammerAnalysis {
 		Node node = new Node(NODE_TYPE.OUTPUT);
 
 		if (word.getType() != TokenType.LEFT_BRACKET) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_LEFT_BRACKET);
 		}
 		word = nextWord();
 		switch (word.getType()) {
@@ -454,17 +507,19 @@ public class GrammerAnalysis {
 			isArrElement(node, word);
 			break;
 		default:
-			// 报错
-			break;
+			ThrowMyException.throwMyException(word,
+					ErrorNum.ILLEGAL_TYPE_FOR_OUTPUT);
 		}
 
 		word = nextWord();
 		if (word.getType() != TokenType.RIGHT_BRACKET) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_RIGHT_BRACKET);
 		}
 		word = nextWord();
 		if (word.getType() != TokenType.SEMICOLON) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_SEMICOLON);
 		}
 
 		return node;
@@ -477,7 +532,8 @@ public class GrammerAnalysis {
 		Word word = nextWord();
 		Node node = new Node(NODE_TYPE.SELECT);
 		if (word.getType() != TokenType.LEFT_BRACKET) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_LEFT_BRACKET);
 		}
 		int type = 0;
 		do {
@@ -494,9 +550,12 @@ public class GrammerAnalysis {
 				type = 1;
 			}
 
-			word = nextWord();
-			if (word.getType() != TokenType.LEFT_BRACKET) {
-				// 报错
+			if (type == 0) {
+				word = nextWord();
+				if (word.getType() != TokenType.LEFT_BRACKET) {
+					ThrowMyException.throwMyException(word,
+							ErrorNum.EXPECTED_LEFT_BRACKET);
+				}
 			}
 
 		} while (true);
@@ -521,19 +580,22 @@ public class GrammerAnalysis {
 
 			word = nextWord();
 			if (word.getType() != TokenType.RIGHT_BRACKET) {
-				// 报错
+				ThrowMyException.throwMyException(word,
+						ErrorNum.EXPECTED_RIGHT_BRACKET);
 			}
 
 			word = nextWord();
 			if (word.getType() != TokenType.LEFT_CURLY_BRACES) {
-				// 报错
+				ThrowMyException.throwMyException(word,
+						ErrorNum.EXPECTED_LEFT_CURLY_BRA);
 			}
 
 			node.addLink(oneBlock());
 		} else {
 			word = nextWord();
 			if (word.getType() != TokenType.LEFT_CURLY_BRACES) {
-				// 报错
+				ThrowMyException.throwMyException(word,
+						ErrorNum.EXPECTED_LEFT_CURLY_BRA);
 			}
 
 			node.addLink(oneBlock());
@@ -550,16 +612,19 @@ public class GrammerAnalysis {
 		Node node = new Node(NODE_TYPE.LOOP);
 
 		if (word.getType() != TokenType.LEFT_BRACKET) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_LEFT_BRACKET);
 		}
 		node.addLink(oneLogic());
 		word = nextWord();
 		if (word.getType() != TokenType.RIGHT_BRACKET) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_RIGHT_BRACKET);
 		}
 		word = nextWord();
 		if (word.getType() != TokenType.LEFT_CURLY_BRACES) {
-			// 报错
+			ThrowMyException.throwMyException(word,
+					ErrorNum.EXPECTED_LEFT_CURLY_BRA);
 		}
 		node.addLink(oneBlock());
 
@@ -588,8 +653,7 @@ public class GrammerAnalysis {
 			isArrElement(node, word);
 			break;
 		default:
-			// 报错
-			break;
+			ThrowMyException.throwMyException(word, ErrorNum.ILLEGAL_LOGIC_EXP);
 		}
 
 		word = nextWord();
@@ -603,8 +667,7 @@ public class GrammerAnalysis {
 			node.addLink(new Node(NODE_TYPE.LOGIC_OPERATOR, word.getValue()));
 			break;
 		default:
-			// 报错
-			break;
+			ThrowMyException.throwMyException(word, ErrorNum.ILLEGAL_LOGIC_OPE);
 		}
 
 		word = nextWord();
@@ -620,8 +683,7 @@ public class GrammerAnalysis {
 			isArrElement(node, word);
 			break;
 		default:
-			// 报错
-			break;
+			ThrowMyException.throwMyException(word, ErrorNum.ILLEGAL_LOGIC_EXP);
 		}
 
 		return node;
@@ -636,7 +698,7 @@ public class GrammerAnalysis {
 		Word word = nextWord();
 		Node node = new Node(NODE_TYPE.ARR_VAL);
 
-		do {
+		out:do {
 			switch (word.getType()) {
 			case INT_VALUE:
 				node.addLink(new Node(NODE_TYPE.INT_VAL, word.getValue()));
@@ -647,16 +709,20 @@ public class GrammerAnalysis {
 			case STRING_VALUE:
 				node.addLink(new Node(NODE_TYPE.STRING_VAL, word.getValue()));
 				break;
+			case RIGHT_CURLY_BRACES:
+				break out;
 			default:
-				// 报错
-				break;
+				ThrowMyException.throwMyException(word,
+						ErrorNum.ILLEGAL_ARR_ELE);
 			}
 			word = nextWord();
 			if (word.getType() == TokenType.RIGHT_CURLY_BRACES) {
 				break;
-			}
-			if (word.getType() == TokenType.COMMA) {
+			} else if (word.getType() == TokenType.COMMA) {
 				word = nextWord();
+			} else {
+				ThrowMyException.throwMyException(word,
+						ErrorNum.EXPECTED_RCB_OR_COMMA);
 			}
 		} while (true);
 
@@ -678,10 +744,12 @@ public class GrammerAnalysis {
 					node.addLink(new Node(NODE_TYPE.IDENTI_ARR_ELEMENT,
 							identifier + "[" + index + "]"));
 				} else {
-					// 报错
+					ThrowMyException.throwMyException(word,
+							ErrorNum.EXPECTED_RIGHT_MEDIUM_BRACKET);
 				}
 			} else {
-				// 报错
+				ThrowMyException.throwMyException(word,
+						ErrorNum.EXPECTED_INT_VAL);
 			}
 		} else {
 			node.addLink(new Node(NODE_TYPE.IDENTIFIER, identifier));
@@ -721,7 +789,8 @@ public class GrammerAnalysis {
 				if (flag) {
 					word = nextWord();
 					if (!Formaluetree.isDigit(word.getValue())) {
-						// 报错
+						ThrowMyException.throwMyException(word,
+								ErrorNum.EXPECTED_DIGIT);
 					}
 					strs.add(value + word.getValue());
 					words.add(word);
@@ -744,7 +813,7 @@ public class GrammerAnalysis {
 		} while (true);
 
 		opeRightBracket(strs, words);
-		
+
 		node.addLink(
 				Formaluetree.createBinaryTree(strs.toArray(new String[] {})));
 

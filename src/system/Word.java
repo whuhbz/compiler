@@ -11,6 +11,13 @@ public class Word {
 	private String value;	//值
 	private int lineNum;	//所在行
 	private int position;	//行偏移
+	private int startLocation;
+	public int getStartLocation() {
+		return startLocation;
+	}
+	public void setStartLocation(int startLocation) {
+		this.startLocation = startLocation;
+	}
 	public TokenType getType() {
 		return type;
 	}

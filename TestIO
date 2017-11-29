@@ -1,0 +1,6 @@
+//测试输入输出
+
+{
+	int a = read(int);
+	write(1+a);
+}

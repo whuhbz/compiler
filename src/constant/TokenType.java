@@ -6,7 +6,7 @@ public enum TokenType {
 	PLUS("+"),MINUS("-"),MULTI("*"),DIVISION("/"),ASSIGN("="),
 	LESS("<"),GREATER(">"),EQUAL("=="),NOT_EQUAL("<>"),NOT_GREATER("<="),
 	NOT_LESS(">="),LEFT_BRACKET("("),RIGHT_BRACKET(")"),SEMICOLON(";"),
-	STRING("String"),IF("if"),ELSE("else"),ELSEIF("elif"),WHILE("while"),READ("read"),WRITE("write"),
+	STRING("string"),IF("if"),ELSE("else"),ELSEIF("elif"),WHILE("while"),READ("read"),WRITE("write"),
 	REAL("real"),INT("int"),IDENTIFIER,STRING_VALUE,INT_VALUE,REAL_VALUE;
 	
 	private String value;

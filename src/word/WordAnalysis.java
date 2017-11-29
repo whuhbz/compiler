@@ -38,8 +38,8 @@ public class WordAnalysis {
 	private char backChar; // 回�??时的字符
 	private ErrorNum errorNum = null; // 当前遇到的错误编�?
 
-	private Pattern idenPattern = Pattern
-			.compile("([a-z,A-Z])|(([a-z,A-Z])" + "([a-z,A-Z]|[0-9]|_)*([a-z,A-Z]|[0-9]))"); // 标识符的正则表达式
+	private Pattern idenPattern = Pattern.compile("([a-z,A-Z])|(([a-z,A-Z])"
+			+ "([a-z,A-Z]|[0-9]|_)*([a-z,A-Z]|[0-9]))"); // 标识符的正则表达式
 
 	private int lineNum = 0; // 当前解析到的行数
 
@@ -60,7 +60,8 @@ public class WordAnalysis {
 	public WordAnalysis(InputStream inputStream) {
 		super();
 		try {
-			this.bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "utf-8"));
+			this.bufferedReader = new BufferedReader(
+					new InputStreamReader(inputStream, "utf-8"));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
@@ -99,14 +100,16 @@ public class WordAnalysis {
 		// 使用递归调用来漏掉空�?
 		return ch;
 	}
+
 	/**
 	 * 获取到行末尾
+	 * 
 	 * @return
 	 */
 	public String getUtilEndOfLine() {
 		StringBuffer str = new StringBuffer();
 		char ch;
-		while((ch = getch()) != 10) {
+		while ((ch = getch()) != 10) {
 			str.append(ch);
 		}
 		return str.toString();
@@ -149,7 +152,7 @@ public class WordAnalysis {
 				tt.setValue("real_value");
 				return new ReturnClass(tt, str);
 			} else {
-				TokenType tt = TokenType.REAL_VALUE;
+				TokenType tt = TokenType.INT_VALUE;
 				tt.setValue("int_value");
 				return new ReturnClass(tt, str);
 			}
@@ -208,6 +211,11 @@ public class WordAnalysis {
 				}
 			}
 			ch = getch();
+			
+			if(!Character.isLetterOrDigit(ch) && ch != '_') {
+				break;
+			}
+			
 		} while (ch != 9 && ch != 10 && ch != 32 && ch != 0);
 
 		isBack = true;
@@ -221,9 +229,9 @@ public class WordAnalysis {
 			return new ReturnClass(tt, sb.toString());
 		} else {
 			errorNum = ErrorNum.ILLEGAL_CHAR_SEQUENCE;
-			System.out.println(
-					"line " + lineNum + ", position " + (cc - sb.toString().length()) + ": " + errorNum.toString());
-			throw new MyException(ErrorNum.ILLEGAL_CHAR_SEQUENCE.toString());
+			throw new MyException("line " + lineNum + ", position "
+					+ (cc - sb.toString().length()) + ": "
+					+ errorNum.toString());
 		}
 
 	}
@@ -238,7 +246,8 @@ public class WordAnalysis {
 		public StringDFA() {
 			super();
 			escapes = new HashSet<Character>();
-			escapes.addAll(Arrays.asList('"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u'));
+			escapes.addAll(Arrays.asList('"', '\\', '/', 'b', 'f', 'n', 'r',
+					't', 'u'));
 			sb = new StringBuffer("\"");
 		}
 
@@ -250,8 +259,8 @@ public class WordAnalysis {
 			if (isEnd) {
 				// 不合法的结尾
 				errorNum = ErrorNum.ILLEGAL_END;
-				System.out.println("line " + lineNum + ", position " + cc + ": " + errorNum.toString());
-				throw new MyException(errorNum.toString());
+				throw new MyException("line " + lineNum + ", position " + cc
+						+ ": " + errorNum.toString());
 			}
 
 			strOut: do {
@@ -277,8 +286,8 @@ public class WordAnalysis {
 						// 非法转义�?
 						sb.append(ch);
 						errorNum = ErrorNum.ILLEGAL_ESCAPE;
-						System.out.println("line " + lineNum + ", position " + (cc - 1) + ": " + errorNum.toString());
-						throw new MyException(errorNum.toString());
+						throw new MyException("line " + lineNum + ", position "
+								+ (cc - 1) + ": " + errorNum.toString());
 					}
 					break;
 				case END_QUOTES:
@@ -299,9 +308,8 @@ public class WordAnalysis {
 			if (nowState != StringDFAState.END_QUOTES) {
 				// 非法字符�?
 				errorNum = ErrorNum.ILLEGAL_STRING;
-				System.out.println(
-						"line " + lineNum + ", position " + (cc - sb.length() + 1) + ": " + errorNum.toString());
-				throw new MyException(errorNum.toString());
+				throw new MyException("line " + lineNum + ", position "
+						+ (cc - sb.length() + 1) + ": " + errorNum.toString());
 			} else {
 				return sb.toString();
 			}
@@ -330,8 +338,8 @@ public class WordAnalysis {
 			if (isEnd) {
 				// 不合法的结尾
 				errorNum = ErrorNum.ILLEGAL_END;
-				System.out.println("line " + lineNum + ", position " + cc + ": " + errorNum.toString());
-				throw new MyException(errorNum.toString());
+				throw new MyException("line " + lineNum + ", position " + cc
+						+ ": " + errorNum.toString());
 			}
 
 			numberOut: do {
@@ -347,9 +355,9 @@ public class WordAnalysis {
 						// 非法数字
 						sb.append(ch);
 						errorNum = ErrorNum.ILLEGAL_NUMBER;
-						System.out.println("line " + lineNum + ", position " + (cc - sb.length() + 1) + ": "
+						throw new MyException("line " + lineNum + ", position "
+								+ (cc - sb.length() + 1) + ": "
 								+ errorNum.toString());
-						throw new MyException(errorNum.toString());
 					}
 					break;
 				case BEGIN_ZERO:
@@ -359,17 +367,10 @@ public class WordAnalysis {
 					} else if (ch == 'e' || ch == 'E') {
 						nowState = NumberDFAState.AFTER_E;
 						sb.append(ch);
-					} else if (ch == '}' || ch == ']' || ch == ',') {
+					} else{
 						isBack = true;
 						backChar = ch;
 						break numberOut;
-					} else {
-						// 非法数字
-						sb.append(ch);
-						errorNum = ErrorNum.ILLEGAL_NUMBER;
-						System.out.println("line " + lineNum + ", position " + (cc - sb.length() + 1) + ": "
-								+ errorNum.toString());
-						throw new MyException(errorNum.toString());
 					}
 					break;
 				case AFTER_DIGIT:
@@ -382,12 +383,7 @@ public class WordAnalysis {
 					} else if (ch == 'e' || ch == 'E') {
 						nowState = NumberDFAState.AFTER_E;
 						sb.append(ch);
-					} else if (ch == '}' || ch == ']' || ch == ',') {
-						isBack = true;
-						backChar = ch;
-						break numberOut;
-					} else {
-						// 非法数字
+					}else {
 						isBack = true;
 						backChar = ch;
 						break numberOut;
@@ -398,12 +394,9 @@ public class WordAnalysis {
 						nowState = NumberDFAState.POINT_DIGIT;
 						sb.append(ch);
 					} else {
-						// 非法数字
-						sb.append(ch);
-						errorNum = ErrorNum.ILLEGAL_NUMBER;
-						System.out.println("line " + lineNum + ", position " + (cc - sb.length() + 1) + ": "
-								+ errorNum.toString());
-						throw new MyException(errorNum.toString());
+						isBack = true;
+						backChar = ch;
+						break numberOut;
 					}
 					break;
 				case POINT_DIGIT:
@@ -446,10 +439,6 @@ public class WordAnalysis {
 					if (ch >= '0' && ch <= '9') {
 						nowState = NumberDFAState.END_DIGIT;
 						sb.append(ch);
-					} else if (ch == '}' || ch == ']' || ch == ',') {
-						isBack = true;
-						backChar = ch;
-						break numberOut;
 					} else {
 						isBack = true;
 						backChar = ch;
@@ -465,13 +454,14 @@ public class WordAnalysis {
 				}
 			} while (ch != 9 && ch != 10 && ch != 32 && ch != 0);
 
-			if (nowState != NumberDFAState.END_DIGIT && nowState != NumberDFAState.BEGIN_ZERO
-					&& nowState != NumberDFAState.AFTER_DIGIT && nowState != NumberDFAState.POINT_DIGIT) {
+			if (nowState != NumberDFAState.END_DIGIT
+					&& nowState != NumberDFAState.BEGIN_ZERO
+					&& nowState != NumberDFAState.AFTER_DIGIT
+					&& nowState != NumberDFAState.POINT_DIGIT) {
 				// 非法数字
 				errorNum = ErrorNum.ILLEGAL_NUMBER;
-				System.out.println(
-						"line " + lineNum + ", position " + (cc - sb.length() + 1) + ": " + errorNum.toString());
-				throw new MyException(errorNum.toString());
+				throw new MyException("line " + lineNum + ", position "
+						+ (cc - sb.length() + 1) + ": " + errorNum.toString());
 			} else {
 				return sb.toString();
 			}

@@ -16,7 +16,7 @@ public enum ErrorNum {
 	EXPECTED_LEFT_CURLY_BRA("Expected<{>"), ILLEGAL_LOGIC_EXP("Illegal logical expression."),
 	ILLEGAL_LOGIC_OPE("Illegal logical operator."), ILLEGAL_ARR_ELE("Illegal array element."),
 	EXPECTED_RCB_OR_COMMA("Expected< } or , >"),EXPECTED_DIGIT("Expected< int value or real value >"),
-	ILLEGAL_PRO_START("Illegal program start.");
+	ILLEGAL_PRO_START("Illegal program start."),ILLEGAL_ARI_ELEMENT("Illegal arithmetic element.");
 	
 	private ErrorNum(String description) {
 		this.description = description;

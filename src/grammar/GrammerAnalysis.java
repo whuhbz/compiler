@@ -44,7 +44,7 @@ public class GrammerAnalysis {
 	 * @return 转换后的词
 	 */
 	private Word rc2Word(ReturnClass rc) {
-		if(rc == null) {
+		if (rc == null) {
 			return null;
 		}
 		Word word = new Word();
@@ -110,7 +110,7 @@ public class GrammerAnalysis {
 				ThrowMyException.throwMyException(beginWord,
 						ErrorNum.ILLEGAL_PRO_START);
 			}
-			
+
 			beginWord = nextWord();
 
 		} while (true);
@@ -237,7 +237,7 @@ public class GrammerAnalysis {
 		Node node = new Node();
 		node.setType(Node.NODE_TYPE.COMMENT);
 		StringBuffer sb = new StringBuffer();
-		
+
 		int state = 0;
 		while (true) {
 			char ch = wordAnalysis.getch();
@@ -353,10 +353,12 @@ public class GrammerAnalysis {
 					ErrorNum.EXPECTED_SEMI_OR_ASSIGN);
 		}
 
-		word = nextWord();
-		if (word.getType() != TokenType.SEMICOLON) {
-			ThrowMyException.throwMyException(word,
-					ErrorNum.EXPECTED_SEMICOLON);
+		if (node.getType() != NODE_TYPE.DEFINE) {
+			word = nextWord();
+			if (word.getType() != TokenType.SEMICOLON) {
+				ThrowMyException.throwMyException(word,
+						ErrorNum.EXPECTED_SEMICOLON);
+			}
 		}
 
 		return node;
@@ -370,7 +372,7 @@ public class GrammerAnalysis {
 	private Node assignWithoutType(Word preWord) {
 		Node node = new Node();
 		node.setType(NODE_TYPE.ASSIGN_WITHOUT_TYPE);
-
+		String identifier = preWord.getValue();
 		Word word = nextWord();
 
 		if (word.getType() == TokenType.LEFT_MEDIUM_BRACKET) {
@@ -379,8 +381,12 @@ public class GrammerAnalysis {
 				String index = word.getValue();
 				word = nextWord();
 				if (word.getType() == TokenType.RIGHT_MEDIUM_BRACKET) {
-					node.addLink(new Node(NODE_TYPE.IDENTI_ARR_ELEMENT,
-							preWord.getValue() + "[" + index + "]"));
+					Node iaNode = new Node(NODE_TYPE.IDENTI_ARR_ELEMENT);
+					Node childNode1 = new Node(NODE_TYPE.IDENTIFIER,
+							identifier);
+					Node childNode2 = new Node(NODE_TYPE.INT_VAL, index);
+					iaNode.addLink(childNode1);
+					iaNode.addLink(childNode2);
 					word = nextWord();
 				} else {
 					String errorMessage = ErrorNum.EXPECTED_RIGHT_MEDIUM_BRACKET
@@ -698,7 +704,7 @@ public class GrammerAnalysis {
 		Word word = nextWord();
 		Node node = new Node(NODE_TYPE.ARR_VAL);
 
-		out:do {
+		out: do {
 			switch (word.getType()) {
 			case INT_VALUE:
 				node.addLink(new Node(NODE_TYPE.INT_VAL, word.getValue()));
@@ -741,8 +747,14 @@ public class GrammerAnalysis {
 				String index = word.getValue();
 				word = nextWord();
 				if (word.getType() == TokenType.RIGHT_MEDIUM_BRACKET) {
-					node.addLink(new Node(NODE_TYPE.IDENTI_ARR_ELEMENT,
-							identifier + "[" + index + "]"));
+					Node iaNode = new Node(NODE_TYPE.IDENTI_ARR_ELEMENT);
+					Node childNode1 = new Node(NODE_TYPE.IDENTIFIER,
+							identifier);
+					Node childNode2 = new Node(NODE_TYPE.INT_VAL, index);
+					iaNode.addLink(childNode1);
+					iaNode.addLink(childNode2);
+					node.addLink(iaNode);
+
 				} else {
 					ThrowMyException.throwMyException(word,
 							ErrorNum.EXPECTED_RIGHT_MEDIUM_BRACKET);
@@ -799,9 +811,33 @@ public class GrammerAnalysis {
 					words.add(word);
 				}
 
-			} else {
-				strs.add(word.getValue());
-				words.add(word);
+			} else if (word.getType() == TokenType.IDENTIFIER) {
+				Word nw1 = nextWord();
+				if (nw1.getType() == TokenType.LEFT_MEDIUM_BRACKET) {
+					Word nw2 = nextWord();
+					if (nw2.getType() == TokenType.INT_VALUE) {
+						Word nw3 = nextWord();
+						if (nw3.getType() == TokenType.RIGHT_MEDIUM_BRACKET) {
+							strs.add(value + nw1.getValue() + nw2.getValue() + nw3.getValue());
+							words.add(nw3);
+						} else {
+							ThrowMyException.throwMyException(word,
+									ErrorNum.EXPECTED_RIGHT_MEDIUM_BRACKET);
+						}
+					} else {
+						ThrowMyException.throwMyException(word,
+								ErrorNum.EXPECTED_INT_VAL);
+					}
+				} else {
+					strs.add(value);
+					words.add(word);
+					wordBuffer.push(nw1);
+				}
+			}
+
+			else {
+				ThrowMyException.throwMyException(word,
+						ErrorNum.ILLEGAL_ARI_ELEMENT);
 			}
 
 			word = nextWord();

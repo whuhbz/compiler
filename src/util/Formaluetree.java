@@ -6,12 +6,16 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import system.Node;
 import system.Node.NODE_TYPE;
 import system.NumNode;
 
 public class Formaluetree {
 
 	private static Pattern numP = Pattern.compile("[+,-]?[0-9]+\\.?[0-9]*");
+	private static Pattern idenPattern = Pattern
+			.compile("([a-z,A-Z])|(([a-z,A-Z])"
+					+ "([a-z,A-Z]|[0-9]|_)*([a-z,A-Z]|[0-9]))"); // 标识符的正则表达式
 
 	/**
 	 * 将算术表达式转化成二叉树
@@ -20,7 +24,7 @@ public class Formaluetree {
 	 *            为了方便，使用字符串数组来存储表达式
 	 * @return 二叉树的根节点
 	 */
-	public static NumNode createBinaryTree(String[] expression) {
+	public static Node createBinaryTree(String[] expression) {
 
 		// 存储操作数的栈
 		Stack<String> opStack = new Stack<String>();
@@ -30,7 +34,7 @@ public class Formaluetree {
 		for (String s : expression) {
 
 			// 如果是数字
-			if (isDigit(s)) {
+			if (isDigit(s) || idenPattern.matcher(s).find()) {
 
 				reversePolish.offer(s);
 				// 如果是操作符
@@ -89,19 +93,20 @@ public class Formaluetree {
 
 			reversePolish.offer(opStack.pop());
 		}
-		Stack<NumNode> nodeStack = new Stack<NumNode>();
+		Stack<Node> nodeStack = new Stack<Node>();
 
 		// 将逆波兰式转化成二叉树
 		while (!reversePolish.isEmpty()) {
 
 			String s = reversePolish.poll();
 			// 以当前的元素的值新建一个节点
-			NumNode node = new NumNode(s);
+			Node node = new Node();
+			node.setValue(s);
 			// 如果是数字
 			if (isDigit(s)) {
-				if(s.contains(".")) {
+				if (s.contains(".")) {
 					node.setType(NODE_TYPE.REAL_VAL);
-				}else {
+				} else {
 					node.setType(NODE_TYPE.INT_VAL);
 				}
 				nodeStack.push(node);
@@ -109,11 +114,26 @@ public class Formaluetree {
 			} else if (isOperator(s)) {
 				node.setType(NODE_TYPE.ARI_OPERATOR);
 				// 从栈里弹出两个节点作为当前节点的左右子节点
-				NumNode rightNode = nodeStack.pop();
-				NumNode leftNode = nodeStack.pop();
-				node.setLchild(leftNode);
-				node.setRchild(rightNode);
+				Node rightNode = nodeStack.pop();
+				Node leftNode = nodeStack.pop();
+				node.addLink(leftNode);
+				node.addLink(rightNode);
 				// 入栈
+				nodeStack.push(node);
+			} else {
+				if(s.contains("[") && s.contains("]")) {
+					node.setValue(null);
+					node.setType(NODE_TYPE.IDENTI_ARR_ELEMENT);
+					int index = s.indexOf("[");
+					
+					Node childNode1 = new Node(NODE_TYPE.IDENTIFIER,
+							s.substring(0, index));
+					Node childNode2 = new Node(NODE_TYPE.INT_VAL, s.substring(index+1,s.length() - 1));
+					node.addLink(childNode1);
+					node.addLink(childNode2);
+				}else {
+					node.setType(NODE_TYPE.IDENTIFIER);
+				}
 				nodeStack.push(node);
 			}
 
@@ -175,7 +195,7 @@ public class Formaluetree {
 	}
 
 	public static boolean isAriElement(String s) {
-		if (isDigit(s) || isOperator(s)) {
+		if (isDigit(s) || isOperator(s) || idenPattern.matcher(s).matches()) {
 			return true;
 		} else {
 			return false;
@@ -238,13 +258,4 @@ public class Formaluetree {
 				System.out.print(")");
 		}
 	}
-
-	public static void main(String[] args) {
-
-		NumNode root = createBinaryTree(new String[] { "(", "-1", "+", "+2",
-				")", "*", "(", "3", "-", "5", ")" });
-		printMathExpression(root);
-
-	}
-
 }

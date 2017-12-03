@@ -21,7 +21,9 @@ public enum ErrorNum {
 	UNDECLARED_IDENTIFIER("Can't use undeclared variable"),UNASSIGNED_IDENTIFIER("Can't use unassigned variable"),
 	UNEXPECT_ERROR("Unexpect error"),ILLEGAL_TYPE_FOR_ARR_INDEX("Illegal type for array index"),
 	MISMATCHED_TYPE_IN_LOGIC("Can't compare two mismatched types in logic"),
-	ILLEGAL_TYPE_IN_ARITHMETIC("An illegal type of element in arthmetic")
+	ILLEGAL_TYPE_IN_ARITHMETIC("An illegal type of element in arthmetic"),
+	ILLEGAL_TYPE_IN_ARRAY("An illegal type of element in array"),
+	DIFFENRENT_TYPES_IN_ARRAY("There're different types of")
 	;
 	
 	private ErrorNum(String description) {

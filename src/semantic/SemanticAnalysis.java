@@ -354,9 +354,11 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	 * @param node 逻辑结构结点
 	 */
 	private void select(Node node){
+		//size
 		for(Node branch: node.getLinks()){
 			one_select_branch(branch);
 		}
+		
 	}
 	
 	/**
@@ -376,10 +378,13 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		else{
 			//分支的逻辑运算结点
 			Node logic = node.getLinks().get(0);
+			
+			
 			//对分支的逻辑运算结点进行分析
 			logic(logic);
 			//对BLOCK结点进行分析
 			travelNode(node.getLinks().get(1));
+		
 		}
 		
 	}
@@ -520,10 +525,40 @@ public class SemanticAnalysis implements TravelGrammarTree{
 					break;
 				case REAL_VAL:
 					ari_type = NODE_TYPE.REAL;
-				case IDENTIFIER:
 					break;
-				
+				case IDENTIFIER:
+					//判断标识符是否已声明
+					if(!SymbolTable.symbolTable.containsKey(element.getValue())){
+						ThrowMyException.throwMyExcepton(ErrorNum.UNDECLARED_IDENTIFIER);
+					}
+					//判断标识符是否已赋值
+					if(!SymbolTable.symbolTable.get(element.getValue()).isAssigned){
+						ThrowMyException.throwMyExcepton(ErrorNum.UNASSIGNED_IDENTIFIER);
+					}
+					//判断标识符类型是否合适
+					switch (SymbolTable.symbolTable.get(element.getValue()).type) {
+					case INT:						
+						break;
+					case REAL:
+						ari_type = NODE_TYPE.REAL;
+						break;
+					default:
+						ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARITHMETIC);
+						break;
+					}
+					break;
+				case IDENTI_ARR_ELEMENT:
+					NODE_TYPE type = identi_arr_element(element);
+					if(type==NODE_TYPE.INT){
+						
+					}else if(type==NODE_TYPE.REAL){
+						ari_type = NODE_TYPE.REAL;
+					}else{
+						ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARITHMETIC);
+					}
+					break;				
 				default:
+					ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARITHMETIC);
 					break;
 				}
 				
@@ -537,12 +572,76 @@ public class SemanticAnalysis implements TravelGrammarTree{
 
 	/**
 	 * 对数组的分析 
-	 * 数组的元素可以为 字符串，标识符，表达式
+	 * 数组的元素可以为 字符串，(标识符)->表达式
 	 * @param node
 	 * @return
 	 */
 	private NODE_TYPE arr_val(Node node){
 		NODE_TYPE arrType = null;
+		//前一个元素的类型
+		NODE_TYPE pre_type = null;
+		List<Node> elements = node.getLinks();
+		for(Node element: elements){
+			
+			//记录第一个element的type
+			if(pre_type==null){
+				switch (element.getType()) {
+				case STRING_VAL:
+					pre_type = NODE_TYPE.STRING;
+					break;
+				/*case IDENTIFIER:
+					//判断标识符是否已声明
+					if(!SymbolTable.symbolTable.containsKey(element.getValue())){
+						ThrowMyException.throwMyExcepton(ErrorNum.UNDECLARED_IDENTIFIER);
+					}
+					Variable identifier = SymbolTable.symbolTable.get(element.getValue());
+					//判断标识符是否已赋值
+					if(!identifier.isAssigned){
+						ThrowMyException.throwMyExcepton(ErrorNum.UNASSIGNED_IDENTIFIER);
+					}
+					switch (identifier.type) {
+					case INT:
+					case REAL:
+					case STRING:
+						pre_type = identifier.type;
+						break;
+
+					default:
+						ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARRAY);
+						break;
+					}
+					
+					break;*/
+				case ARITHMETIC:
+					pre_type = arithmetic(element);
+					break;
+
+				default:
+					ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARRAY);
+					break;
+				}
+			}
+			
+			//查看后面的元素类型是否一致
+			switch (element.getType()) {
+			case STRING_VAL:
+				if(pre_type==NODE_TYPE.STRING){
+					break;
+				}else{
+					ThrowMyException.throwMyExcepton(ErrorNum.DIFFENRENT_TYPES_IN_ARRAY);
+				}
+			case ARITHMETIC:
+				pre_type = arithmetic(element);
+				break;
+
+			default:
+				break;
+			}
+			
+			
+			
+			
+		}
 		
 		return arrType;
 	}

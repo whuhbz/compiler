@@ -1,5 +1,4 @@
 //测试顺序结构
 {
-	j = "string";
-	i = a+a[1];
+	int i = "STring";
 }

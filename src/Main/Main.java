@@ -9,6 +9,7 @@ import java.util.Scanner;
 import grammar.GrammerAnalysis;
 import grammar.SimpleTravel2;
 import grammar.TravelGrammarTree;
+import semantic.SemanticAnalysis;
 import system.Node;
 
 public class Main {
@@ -46,6 +47,9 @@ public class Main {
 			}
 
 			tgt.travel(root);
+			
+			SemanticAnalysis semanticAnalysis = new SemanticAnalysis();
+			semanticAnalysis.travel(root);
 
 			System.setOut(oldPs);
 

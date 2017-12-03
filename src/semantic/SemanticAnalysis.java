@@ -144,7 +144,8 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		//如果是表达式
 		case ARITHMETIC:
 			NODE_TYPE arithmeticType = arithmetic(childs.get(3));
-			if(arithmeticType!=variableType){
+			if (arithmeticType != variableType
+					&& !(arithmeticType == NODE_TYPE.INT && variableType == NODE_TYPE.REAL)) {
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
 			break;
@@ -158,7 +159,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		//如果是数组
 		case ARR_VAL:
 			NODE_TYPE arrType = arr_val(childs.get(3));
-			if(arrType!=variableType){
+			if (arrType != variableType && !(arrType == NODE_TYPE.INT && variableType == NODE_TYPE.REAL)) {
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
 			break;
@@ -168,7 +169,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			String inputType = childs.get(3).getValue();
 			switch (inputType) {
 			case "A int from input.":
-				if(variableType!=NODE_TYPE.INT){
+				if(variableType!=NODE_TYPE.INT&&variableType!=NODE_TYPE.REAL){
 					ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 				}
 				break;
@@ -239,7 +240,8 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		// 如果是表达式
 		case ARITHMETIC:
 			NODE_TYPE arithmeticType = arithmetic(childs.get(2));
-			if (arithmeticType != variableType) {
+			if (arithmeticType != variableType
+					&& !(arithmeticType == NODE_TYPE.INT && variableType == NODE_TYPE.REAL)) {
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
 			break;
@@ -253,7 +255,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		// 如果是数组
 		case ARR_VAL:
 			NODE_TYPE arrType = arr_val(childs.get(2));
-			if (arrType != variableType) {
+			if (arrType != variableType && !(arrType == NODE_TYPE.INT && variableType == NODE_TYPE.REAL)) {
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
 			break;
@@ -262,7 +264,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			String inputType = childs.get(2).getValue();
 			switch (inputType) {
 			case "A int from input.":
-				if (variableType != NODE_TYPE.INT) {
+				if (variableType != NODE_TYPE.INT&&variableType!=NODE_TYPE.REAL) {
 					ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 				}
 				break;
@@ -424,11 +426,12 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			ari_type = NODE_TYPE.REAL;
 			break;
 		case IDENTIFIER:
-			switch (SymbolTable.symbolTable.get(root.getValue()).type) {
+			NODE_TYPE t = identifier(root);
+			switch (t) {
 			case INT:
 			case REAL:
 			case STRING:
-				ari_type = SymbolTable.symbolTable.get(root.getValue()).type;
+				ari_type = t;
 				break;
 			default:
 				ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARITHMETIC);
@@ -452,6 +455,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			}else {
 				ari_type = NODE_TYPE.REAL;
 			}
+			break;
 		default:
 			ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARITHMETIC);
 			break;
@@ -463,15 +467,14 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	
 	/**
 	 * 递归函数，用于获得一个子表达式的类型 子表达式中不能再出现STRING类型
-	 * @param ari_node 子表达式结点
+	 * @param ari_node 子表达式根结点
 	 * @return 子表达式的类型  INT REAL
 	 */
 	private NODE_TYPE child_arithmetic(Node ari_node){
 		NODE_TYPE ari_type = null;
-		// 获取二叉树的根结点
-		Node root = ari_node.getLinks().get(0);
+
 		// 判断根结点类型,分两种情况，算数运算符或其他
-		switch (root.getType()) {
+		switch (ari_node.getType()) {
 		case INT_VAL:
 			ari_type = NODE_TYPE.INT;
 			break;
@@ -479,10 +482,10 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			ari_type = NODE_TYPE.REAL;
 			break;
 		case IDENTIFIER:
-			switch (SymbolTable.symbolTable.get(root.getValue()).type) {
+			switch (SymbolTable.symbolTable.get(ari_node.getValue()).type) {
 			case INT:
 			case REAL:
-				ari_type = SymbolTable.symbolTable.get(root.getValue()).type;
+				ari_type = SymbolTable.symbolTable.get(ari_node.getValue()).type;
 				break;
 			default:
 				ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARITHMETIC);
@@ -490,7 +493,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			}
 			break;
 		case IDENTI_ARR_ELEMENT:
-			NODE_TYPE type = identi_arr_element(root);
+			NODE_TYPE type = identi_arr_element(ari_node);
 			if(type==NODE_TYPE.INT||type==NODE_TYPE.REAL){
 				ari_type = type;
 			}else{
@@ -500,7 +503,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		// 如果是操作运算符
 		case ARI_OPERATOR:
 			// 获取操作运算符的两个表达式子式
-			List<Node> childs = root.getLinks();
+			List<Node> childs = ari_node.getLinks();
 			// 两个表达式子式的数据类型
 			NODE_TYPE child_type1 = null, child_type2 = null;
 			child_type1 = child_arithmetic(childs.get(0));
@@ -511,6 +514,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			} else {
 				ari_type = NODE_TYPE.REAL;
 			}
+			break;
 		default:
 			ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARITHMETIC);
 			break;
@@ -579,14 +583,32 @@ public class SemanticAnalysis implements TravelGrammarTree{
 						ThrowMyException.throwMyExcepton(ErrorNum.DIFFENRENT_TYPES_IN_ARRAY);
 					}
 				case ARITHMETIC:
-					pre_type = arithmetic(element);
-					break;
+					if(pre_type==arithmetic(element)){
+						break;
+					}else{
+						ThrowMyException.throwMyExcepton(ErrorNum.DIFFENRENT_TYPES_IN_ARRAY);
+					}			
 
 				default:
+					ThrowMyException.throwMyExcepton(ErrorNum.DIFFENRENT_TYPES_IN_ARRAY);
 					break;
 				}
 			}
 			
+		}
+		
+		switch (pre_type) {
+		case INT:
+			arrType = NODE_TYPE.INT_ARR;
+			break;
+		case REAL:
+			arrType = NODE_TYPE.REAL_ARR;
+			break;
+		case STRING:
+			arrType = NODE_TYPE.STRING_ARR;
+			break;
+		default:
+			break;
 		}
 		
 		return arrType;
@@ -594,7 +616,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	
 	/**
 	 * 对数组元素的分析
-	 * @param node 数组元素结点 子节点序列：数组名IDENTIFIER  下标（标识符或表达式）//目前仅为整数
+	 * @param node 数组元素结点 子节点序列：数组名IDENTIFIER  下标（表达式）
 	 * @return 该数组元素的数据类型
 	 */
 	private NODE_TYPE identi_arr_element(Node node){
@@ -612,7 +634,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			ThrowMyException.throwMyExcepton(ErrorNum.UNASSIGNED_IDENTIFIER);
 		}
 		//根据数组的类型获得变量类型
-		switch (node.getLinks().get(0).getType()) {
+		switch (SymbolTable.symbolTable.get(node.getLinks().get(0).getValue()).type) {
 		case INT_ARR:
 			type = NODE_TYPE.INT;
 			break;
@@ -630,21 +652,6 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		indexnode = node.getLinks().get(1);
 		switch (indexnode.getType()) {
 		case INT_VAL:
-			break;
-		//如果是标识符
-		case IDENTIFIER:
-			//检查标识符对应变量是否声明
-			if(!SymbolTable.symbolTable.containsKey(indexnode.getValue())){
-				ThrowMyException.throwMyExcepton(ErrorNum.UNDECLARED_IDENTIFIER);
-			}
-			//检查标识符对应变量是否已赋值
-			if(SymbolTable.symbolTable.get(indexnode.getValue()).isAssigned==false){
-				ThrowMyException.throwMyExcepton(ErrorNum.UNASSIGNED_IDENTIFIER);
-			}
-			indexType = SymbolTable.symbolTable.get(indexnode.getValue()).type;
-			if(indexType!=NODE_TYPE.INT){
-				ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_FOR_ARR_INDEX);
-			}
 			break;
 		//如果是表达式
 		case ARITHMETIC:

@@ -212,9 +212,7 @@ public class GrammerAnalysis {
 			node = oneBlockComment();
 			break;
 		default:
-			System.out.println(word.getType() + " " + word.getValue());
-			ThrowMyException.throwMyException(word,
-					ErrorNum.EXPECTED_DIV_OR_MUL);
+			ThrowMyException.throwMyException(word, ErrorNum.EXPECTED_DIV_OR_MUL);
 		}
 
 		return node;

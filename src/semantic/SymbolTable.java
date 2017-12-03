@@ -8,5 +8,5 @@ import java.util.Map;
  */
 public class SymbolTable {
 	public static Map<String, Variable> symbolTable = new HashMap<>();
-
+	
 }

@@ -6,16 +6,12 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import constant.Machers;
 import system.Node;
 import system.Node.NODE_TYPE;
 import system.NumNode;
 
 public class Formaluetree {
-
-	private static Pattern numP = Pattern.compile("[+,-]?[0-9]+\\.?[0-9]*");
-	private static Pattern idenPattern = Pattern
-			.compile("([a-z,A-Z])|(([a-z,A-Z])"
-					+ "([a-z,A-Z]|[0-9]|_)*([a-z,A-Z]|[0-9]))"); // 标识符的正则表达式
 
 	/**
 	 * 将算术表达式转化成二叉树
@@ -34,7 +30,7 @@ public class Formaluetree {
 		for (String s : expression) {
 
 			// 如果是数字
-			if (isDigit(s) || idenPattern.matcher(s).find()) {
+			if (isDigit(s) || Machers.idenPattern.matcher(s).find()) {
 
 				reversePolish.offer(s);
 				// 如果是操作符
@@ -120,20 +116,21 @@ public class Formaluetree {
 				node.addLink(rightNode);
 				// 入栈
 				nodeStack.push(node);
-			} else {
-				if(s.contains("[") && s.contains("]")) {
-					node.setValue(null);
-					node.setType(NODE_TYPE.IDENTI_ARR_ELEMENT);
-					int index = s.indexOf("[");
-					
-					Node childNode1 = new Node(NODE_TYPE.IDENTIFIER,
-							s.substring(0, index));
-					Node childNode2 = new Node(NODE_TYPE.INT_VAL, s.substring(index+1,s.length() - 1));
-					node.addLink(childNode1);
-					node.addLink(childNode2);
-				}else {
-					node.setType(NODE_TYPE.IDENTIFIER);
-				}
+			} else if ( Machers.idenArrPattern.matcher(s).matches()) {
+				node.setValue(null);
+				node.setType(NODE_TYPE.IDENTI_ARR_ELEMENT);
+				int index = s.indexOf("[");
+
+				Node childNode1 = new Node(NODE_TYPE.IDENTIFIER,
+						s.substring(0, index));
+				Node childNode2 = new Node(NODE_TYPE.INT_VAL,
+						s.substring(index + 1, s.length() - 1));
+				node.addLink(childNode1);
+				node.addLink(childNode2);
+
+				nodeStack.push(node);
+			} else if ( Machers.idenPattern.matcher(s).matches()) {
+				node.setType(NODE_TYPE.IDENTIFIER);
 				nodeStack.push(node);
 			}
 
@@ -185,7 +182,7 @@ public class Formaluetree {
 	 */
 	public static boolean isDigit(String s) {
 
-		Matcher m = numP.matcher(s);
+		Matcher m =  Machers.numP.matcher(s);
 
 		if (m.matches()) {
 			return true;
@@ -195,7 +192,7 @@ public class Formaluetree {
 	}
 
 	public static boolean isAriElement(String s) {
-		if (isDigit(s) || isOperator(s) || idenPattern.matcher(s).matches()) {
+		if (isDigit(s) || isOperator(s) ||  Machers.idenPattern.matcher(s).matches()) {
 			return true;
 		} else {
 			return false;

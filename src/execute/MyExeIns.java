@@ -104,7 +104,8 @@ public class MyExeIns implements Execute.ExeIns {
 			} else {
 				
 				if(res != null) {
-					Integer index = (Integer)res;
+					Variable resV = exe.getVarible((String) res);
+					Integer index = (Integer)resV.value;
 					
 					if(index >= ((List<Object>) (v2V.value)).size()) {	//数组越界
 						throw new RuntimeException();

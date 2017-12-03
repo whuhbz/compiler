@@ -1,8 +1,7 @@
 //测试循环
 
 {
-	int i = 1;
-	while(i < 10){
-		write("I love programming.\n");
+	while(i>2){
+		i = 3;
 	}
 }

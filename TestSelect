@@ -6,5 +6,9 @@
 	int a = 4;
 	if(3 < a){
 		write("3 < a");
+	}elif(3==a){
+		write("3==a");
+	}else{
+		write("3>a");
 	}
 }

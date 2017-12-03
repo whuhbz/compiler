@@ -9,4 +9,9 @@ public class ThrowMyException {
 				+ word.getStartLocation();
 		throw new MyException(errorMessage);
 	}
+	
+	public static void throwMyExcepton(ErrorNum errorNum){
+		String errorMessage = errorNum.toString();
+		throw new MyException(errorMessage);
+	}
 }

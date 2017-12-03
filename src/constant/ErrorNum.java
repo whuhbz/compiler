@@ -23,7 +23,8 @@ public enum ErrorNum {
 	MISMATCHED_TYPE_IN_LOGIC("Can't compare two mismatched types in logic"),
 	ILLEGAL_TYPE_IN_ARITHMETIC("An illegal type of element in arthmetic"),
 	ILLEGAL_TYPE_IN_ARRAY("An illegal type of element in array"),
-	DIFFENRENT_TYPES_IN_ARRAY("There're different types of")
+	DIFFENRENT_TYPES_IN_ARRAY("There're different types of"),
+	ILLEGAL_TYPE_IN_LOGICAL("Illegal type in logical")
 	;
 	
 	private ErrorNum(String description) {

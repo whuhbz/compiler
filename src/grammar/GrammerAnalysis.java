@@ -833,9 +833,10 @@ public class GrammerAnalysis {
 					words.add(word);
 					wordBuffer.push(nw1);
 				}
-			}
-
-			else {
+			}else if(Formaluetree.isOperator(value)){
+				strs.add(value);
+				words.add(word);
+			}else {
 				ThrowMyException.throwMyException(word,
 						ErrorNum.ILLEGAL_ARI_ELEMENT);
 			}

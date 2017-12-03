@@ -5,5 +5,5 @@ public enum Instructions {
 	MUL, DIV, GT, LT,
 	GET, LET, EQ, NEQ,
 	WRI, REA, DEC, END,
-	EOA
+	EOA, CON
 }

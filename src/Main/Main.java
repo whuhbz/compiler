@@ -12,6 +12,7 @@ import grammar.TravelGrammarTree;
 import system.Node;
 
 public class Main {
+	/*
 	public static void main(String[] args) throws FileNotFoundException {
 		// 如果指定了输出文件路径
 		PrintStream newPs = null;
@@ -52,5 +53,5 @@ public class Main {
 			System.out.println("Done.");
 		}
 
-	}
+	}*/
 }

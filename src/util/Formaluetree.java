@@ -1,10 +1,11 @@
 package util;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import constant.Machers;
 import system.Node;
@@ -13,6 +14,12 @@ import system.NumNode;
 
 public class Formaluetree {
 
+	public static void main(String[] args) {
+		System.out.println(isAriElement(","));
+	}
+	
+	public static List<Node> indexNodes = new ArrayList<Node>();
+	
 	/**
 	 * 将算术表达式转化成二叉树
 	 * 
@@ -120,11 +127,11 @@ public class Formaluetree {
 				node.setValue(null);
 				node.setType(NODE_TYPE.IDENTI_ARR_ELEMENT);
 				int index = s.indexOf("[");
-
+				int nodeIndex = Integer.parseInt(s.substring(index + 1, s.length() - 1));
+				
 				Node childNode1 = new Node(NODE_TYPE.IDENTIFIER,
 						s.substring(0, index));
-				Node childNode2 = new Node(NODE_TYPE.INT_VAL,
-						s.substring(index + 1, s.length() - 1));
+				Node childNode2 = indexNodes.get(nodeIndex);
 				node.addLink(childNode1);
 				node.addLink(childNode2);
 
@@ -208,7 +215,7 @@ public class Formaluetree {
 	 */
 	static boolean isGreat(String op1, String op2) {
 
-		if (getPriority(op1) > getPriority(op2))
+		if (getPriority(op1) >= getPriority(op2))
 
 			return true;
 

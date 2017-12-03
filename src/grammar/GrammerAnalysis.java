@@ -436,8 +436,6 @@ public class GrammerAnalysis {
 			node.addLink(oneArr());
 			break;
 		case IDENTIFIER:
-			isArrElement(node, word);
-			break;
 		case INT_VALUE:
 		case REAL_VALUE:
 		case PLUS:
@@ -507,10 +505,8 @@ public class GrammerAnalysis {
 		case PLUS:
 		case MINUS:
 		case LEFT_BRACKET:
-			node.addLink(oneArithmetic(word));
-			break;
 		case IDENTIFIER:
-			isArrElement(node, word);
+			node.addLink(oneArithmetic(word));
 			break;
 		default:
 			ThrowMyException.throwMyException(word,
@@ -583,7 +579,6 @@ public class GrammerAnalysis {
 
 		if (type == 0) {
 			node.addLink(oneLogic());
-
 			word = nextWord();
 			if (word.getType() != TokenType.RIGHT_BRACKET) {
 				ThrowMyException.throwMyException(word,
@@ -818,7 +813,8 @@ public class GrammerAnalysis {
 					if (nw2.getType() == TokenType.INT_VALUE) {
 						Word nw3 = nextWord();
 						if (nw3.getType() == TokenType.RIGHT_MEDIUM_BRACKET) {
-							strs.add(value + nw1.getValue() + nw2.getValue() + nw3.getValue());
+							strs.add(value + nw1.getValue() + nw2.getValue()
+									+ nw3.getValue());
 							words.add(nw3);
 						} else {
 							ThrowMyException.throwMyException(word,
@@ -833,10 +829,10 @@ public class GrammerAnalysis {
 					words.add(word);
 					wordBuffer.push(nw1);
 				}
-			}else if(Formaluetree.isOperator(value)){
+			} else if (Formaluetree.isOperator(value)) {
 				strs.add(value);
 				words.add(word);
-			}else {
+			} else {
 				ThrowMyException.throwMyException(word,
 						ErrorNum.ILLEGAL_ARI_ELEMENT);
 			}

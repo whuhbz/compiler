@@ -42,19 +42,19 @@ public class MyExeIns implements Execute.ExeIns {
 			forLT(exe, v1, v2, res);
 			break;
 		case GET:
-			forJMP(exe, v1, v2, res);
+			forGET(exe, v1, v2, res);
 			break;
 		case LET:
-			forJMP(exe, v1, v2, res);
+			forLET(exe, v1, v2, res);
 			break;
 		case EQ:
-			forJMP(exe, v1, v2, res);
+			forEQ(exe, v1, v2, res);
 			break;
 		case NEQ:
-			forJMP(exe, v1, v2, res);
+			forNEQ(exe, v1, v2, res);
 			break;
 		case WRI:
-			forJMP(exe, v1, v2, res);
+			forWRI(exe, v1, v2, res);
 			break;
 		case REA:
 			forREA(exe, v1, v2, res);
@@ -67,6 +67,9 @@ public class MyExeIns implements Execute.ExeIns {
 			break;
 		case EOA:
 			forEOA(exe, v1, v2, res);
+			break;
+		case CON:
+			forCON(exe, v1, v2, res);
 			break;
 		}
 	}
@@ -99,15 +102,31 @@ public class MyExeIns implements Execute.ExeIns {
 					|| v1V.type == NODE_TYPE.STRING_ARR) {
 				v2V.value = v1V.value;
 			} else {
-				((List<Object>) (v2V.value)).clear();
-				v2V.isAssigned = false;
-				((List<Object>) (v2V.value)).add(v1V.value);
+				
+				if(res != null) {
+					Integer index = (Integer)res;
+					
+					if(index >= ((List<Object>) (v2V.value)).size()) {	//数组越界
+						throw new RuntimeException();
+					}
+					
+					((List<Object>) (v2V.value)).set(index, v1V.value);
+				}else {
+					if(v2V.isAssigned) {
+						((List<Object>) (v2V.value)).clear();
+						v2V.isAssigned = false;
+					}		
+					((List<Object>) (v2V.value)).add(v1V.value);
+				}
+				
+				
 			}
 
 		} else {
 			v2V.value = v1V.value;
 		}
-
+		
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -122,7 +141,7 @@ public class MyExeIns implements Execute.ExeIns {
 		} else {
 			resV.value = (Double) (v1V.value) + (Double) (v2V.value);
 		}
-
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -137,6 +156,7 @@ public class MyExeIns implements Execute.ExeIns {
 		} else {
 			resV.value = (Double) (v1V.value) - (Double) (v2V.value);
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -151,6 +171,7 @@ public class MyExeIns implements Execute.ExeIns {
 		} else {
 			resV.value = (Double) (v1V.value) * (Double) (v2V.value);
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -169,6 +190,7 @@ public class MyExeIns implements Execute.ExeIns {
 		} else {
 			resV.value = (Double) (v1V.value) / (Double) (v2V.value);
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -183,6 +205,7 @@ public class MyExeIns implements Execute.ExeIns {
 		} else {
 			resV.value = false;
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -192,11 +215,32 @@ public class MyExeIns implements Execute.ExeIns {
 		Variable v2V = exe.getVarible((String) v2);
 		Variable resV = exe.getVarible((String) res);
 
-		if ((Double) (v1V.value) < (Double) (v2V.value)) {
-			resV.value = true;
-		} else {
-			resV.value = false;
+		if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
+			if ((Integer) (v1V.value) < (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			if ((Integer) (v1V.value) < (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			if ((Double) (v1V.value) < (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else {
+			if ((Double) (v1V.value) < (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -211,6 +255,7 @@ public class MyExeIns implements Execute.ExeIns {
 		} else {
 			resV.value = false;
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -225,6 +270,7 @@ public class MyExeIns implements Execute.ExeIns {
 		} else {
 			resV.value = false;
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -239,6 +285,7 @@ public class MyExeIns implements Execute.ExeIns {
 		} else {
 			resV.value = false;
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -253,6 +300,7 @@ public class MyExeIns implements Execute.ExeIns {
 		} else {
 			resV.value = false;
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -261,6 +309,7 @@ public class MyExeIns implements Execute.ExeIns {
 		Variable v1V = exe.getVarible((String) v1);
 
 		System.out.println(v1V.value);
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -286,6 +335,7 @@ public class MyExeIns implements Execute.ExeIns {
 		default:
 			break;
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -313,7 +363,11 @@ public class MyExeIns implements Execute.ExeIns {
 		case STRING_ARR:
 			exe.addVarible(name, type, new ArrayList<String>(), false);
 			break;
+		case BOOLEAN:
+			exe.addVarible(name, type, new Boolean(false), false);
+			break;
 		}
+		exe.counterPlusOne();
 	}
 
 	@Override
@@ -339,7 +393,16 @@ public class MyExeIns implements Execute.ExeIns {
 		}
 
 		resV.value = l.get(index);
+		exe.counterPlusOne();
+	}
 
+	@Override
+	public void forCON(Execute exe, Object v1, Object v2, Object res) {
+		// TODO Auto-generated method stub
+		Variable v1V = exe.getVarible((String) v1); 
+		
+		v1V.value = v2;
+		exe.counterPlusOne();
 	}
 
 }

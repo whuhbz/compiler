@@ -69,7 +69,7 @@ public class Execute {
 
 	// 加载中间代码文件
 	private void loadMiddleCodes(String fileName) throws IOException {
-		FileInputStream fis = new FileInputStream("test.txt");
+		FileInputStream fis = new FileInputStream(fileName);
 		ois = new ObjectInputStream(fis);
 	}
 
@@ -147,5 +147,7 @@ public class Execute {
 		void forEND(Execute exe, Object v1, Object v2, Object res);
 
 		void forEOA(Execute exe, Object v1, Object v2, Object res);
+		
+		void forCON(Execute exe, Object v1, Object v2, Object res);
 	}
 }

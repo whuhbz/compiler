@@ -639,10 +639,8 @@ public class GrammerAnalysis {
 		case PLUS:
 		case MINUS:
 		case LEFT_BRACKET:
-			node.addLink(oneArithmetic(word));
-			break;
 		case IDENTIFIER:
-			isArrElement(node, word);
+			node.addLink(oneArithmetic(word));
 			break;
 		default:
 			ThrowMyException.throwMyException(word, ErrorNum.ILLEGAL_LOGIC_EXP);

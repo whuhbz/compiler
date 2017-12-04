@@ -3,7 +3,9 @@ package semantic;
 import java.util.List;
 
 import constant.ErrorNum;
+import constant.Instructions;
 import grammar.TravelGrammarTree;
+import system.MiddleCode;
 import system.Node;
 import system.ThrowMyException;
 import system.Node.NODE_TYPE;
@@ -33,6 +35,21 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		if(node.getType()!=NODE_TYPE.PROGRAM){
 			return;
 		}
+		//添加几个固定的中间变量
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.BOOLEAN, "$false", null));
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.BOOLEAN, "$true", null));
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.INT, "$IN_INT", null));
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL, "$IN_REAL", null));
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING, "$IN_STRING", null));
+		
+		//为固定值的中间变量赋值
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$false",false , null));
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$true",true , null));
+
+
+
+
+
 		//由根结点开始遍历语法树
 		travelNode(node);
 	}
@@ -112,6 +129,8 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		}
 		variable = new Variable(variableName, variableType, false);
 		SymbolTable.symbolTable.put(variableName, variable);
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, variableType, variableName, null));
+		
 	}
 	
 
@@ -139,6 +158,10 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			ThrowMyException.throwMyExcepton(ErrorNum.EXISTED_SYMBOL);
 		}
 		
+		variable = new Variable(variableName, variableType,false);
+		SymbolTable.symbolTable.put(variableName, variable);
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, variableType, variableName, null));
+
 		//根据用于赋值的结点的类型进行分析
 		switch (childs.get(3).getType()) {
 		//如果是表达式
@@ -148,13 +171,30 @@ public class SemanticAnalysis implements TravelGrammarTree{
 					&& !(arithmeticType == NODE_TYPE.INT && variableType == NODE_TYPE.REAL)) {
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
+			
+			SymbolTable.symbolTable.get(variableName).isAssigned = true;
+			
+			String name = getArithmeticName(childs.get(3));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, name, variableName, null));
+
 			break;
 		//如果是字符串
 		case STRING_VAL:
 			//如果数据类型不匹配
-			if(variableType!=NODE_TYPE.STRING_VAL){
+			if(variableType!=NODE_TYPE.STRING){
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
+			
+			SymbolTable.symbolTable.get(variableName).isAssigned = true;
+		
+			MiddleCode.middleCodes.add(
+					new MiddleCode(Instructions.DEC, NODE_TYPE.STRING, "$\"" + childs.get(3).getValue() + "\"", null));
+
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$\"" + childs.get(3).getValue() + "\"",
+					childs.get(3).getValue(), null));
+			MiddleCode.middleCodes
+					.add(new MiddleCode(Instructions.MOV, "$\"" + childs.get(3).getValue() + "\"", variableName, null));
+
 			break;
 		//如果是数组
 		case ARR_VAL:
@@ -162,6 +202,8 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			if (arrType != variableType && !(arrType == NODE_TYPE.INT && variableType == NODE_TYPE.REAL)) {
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
+			SymbolTable.symbolTable.get(variableName).isAssigned = true;
+			mov_arr(childs.get(3), arrType, variableName);
 			break;
 			
 		//如果是输入语句
@@ -172,16 +214,28 @@ public class SemanticAnalysis implements TravelGrammarTree{
 				if(variableType!=NODE_TYPE.INT&&variableType!=NODE_TYPE.REAL){
 					ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 				}
+				SymbolTable.symbolTable.get(variableName).isAssigned = true;
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, variableType, null, null));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_INT", variableName, null));
+
 				break;
 			case "A real from input":
 				if(variableType!=NODE_TYPE.REAL){
 					ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 				}
+				SymbolTable.symbolTable.get(variableName).isAssigned = true;
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, variableType, null, null));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_REAL", variableName, null));
+
 				break;
 			case "A string from input.":
 				if(variableType!=NODE_TYPE.STRING){
 					ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 				}
+				SymbolTable.symbolTable.get(variableName).isAssigned = true;
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, variableType, null, null));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_STRING", variableName, null));
+
 				break;
 
 			default:
@@ -194,8 +248,8 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			System.out.println("带声明的赋值语句用于赋值的结点的类型还有："+childs.get(3).getType().toString());
 			break;
 		}
-		variable = new Variable(variableName, variableType,true);
-		SymbolTable.symbolTable.put(variableName, variable);
+
+		
 	}
 	
 	
@@ -205,9 +259,9 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	 * 子节点序列：标识符或数组元素   等号   表达式 （表达式构成元素为常量，整形、实数变量（不为单独存在）或整形、实数数组元素  ）或字符串  或数组  或read语句
 	 */
 	private void assign_without_type(Node node){
-		//声明的变量
+		//变量
 		Variable variable = null;
-		//声明的类型
+		//类型
 		NODE_TYPE variableType = null;
 		//变量名
 		String variableName = null;
@@ -215,8 +269,11 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		List<Node> childs = node.getLinks();
 		
 		//判断被赋值的变量的数据类型
+		int type = 0;
+		String index = null;
 		//如果是对标识符赋值
 		if(childs.get(0).getType()==NODE_TYPE.IDENTIFIER){
+			type = 0;
 			//记录变量名
 			variableName = childs.get(0).getValue();
 			variable = SymbolTable.symbolTable.get(variableName);
@@ -228,6 +285,11 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		}
 		//如果是对数组元素赋值
 		else if(childs.get(0).getType()==NODE_TYPE.IDENTI_ARR_ELEMENT){
+			
+			arithmetic(childs.get(0).getLinks().get(1));
+			index = getArithmeticName(childs.get(0).getLinks().get(1));
+			variableName = childs.get(0).getLinks().get(0).getValue();
+			type = 1;
 			Node element = childs.get(0);
 			variableType = identi_arr_element(element);
 		}else{
@@ -244,6 +306,16 @@ public class SemanticAnalysis implements TravelGrammarTree{
 					&& !(arithmeticType == NODE_TYPE.INT && variableType == NODE_TYPE.REAL)) {
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
+			//如果对标识符赋值
+			if(type==0){
+				
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, getArithmeticName(childs.get(2)), variableName, null));
+			}
+			//如果对数组元素赋值
+			else{
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, getArithmeticName(childs.get(2)), variableName, index));
+			}
+
 			break;
 		// 如果是字符串
 		case STRING_VAL:
@@ -251,13 +323,28 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			if (variableType != NODE_TYPE.STRING_VAL) {
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING,
+					"$\"" + childs.get(2).getValue() + "\"", null));
+
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$\"" + childs.get(2).getValue() + "\"",
+					childs.get(2).getValue(), null));
+			if(type==0){
+				
+				MiddleCode.middleCodes.add(
+						new MiddleCode(Instructions.MOV, "$\"" + childs.get(2).getValue() + "\"", variableName, null));
+			}else {
+				MiddleCode.middleCodes.add(
+						new MiddleCode(Instructions.MOV, "$\"" + childs.get(2).getValue() + "\"", variableName, index));
+			}
+			
 			break;
 		// 如果是数组
 		case ARR_VAL:
 			NODE_TYPE arrType = arr_val(childs.get(2));
-			if (arrType != variableType && !(arrType == NODE_TYPE.INT && variableType == NODE_TYPE.REAL)) {
+			if (arrType != variableType) {
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
+			mov_arr(childs.get(2), arrType, variableName);
 			break;
 		// 如果是输入语句
 		case INPUT:
@@ -267,16 +354,41 @@ public class SemanticAnalysis implements TravelGrammarTree{
 				if (variableType != NODE_TYPE.INT&&variableType!=NODE_TYPE.REAL) {
 					ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 				}
+				if(type==0){
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, variableType, null, null));
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_INT", variableName, null));
+				}else{
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, variableType, null, null));
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_INT", variableName, index));
+				}
+				
+
 				break;
 			case "A real from input":
 				if (variableType != NODE_TYPE.REAL) {
 					ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 				}
+				if (type == 0) {
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, variableType, null, null));
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_REAL", variableName, null));
+				} else {
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, variableType, null, null));
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_REAL", variableName, index));
+				}
+
 				break;
 			case "A string from input.":
 				if (variableType != NODE_TYPE.STRING) {
 					ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 				}
+				if (type == 0) {
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, variableType, null, null));
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_STRING", variableName, null));
+				} else {
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, variableType, null, null));
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_STRING", variableName, index));
+				}
+		
 				break;
 
 			default:
@@ -328,8 +440,12 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			
 			//对分支的逻辑运算结点进行分析
 			logic(logic);
+			int firstSize = MiddleCode.middleCodes.size();
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.JMP, getLogicName(logic), null, null));
 			//对BLOCK结点进行分析
 			travelNode(node.getLinks().get(1));
+			int lastSize = MiddleCode.middleCodes.size();
+			MiddleCode.middleCodes.get(firstSize).setRes(lastSize);
 		
 		}
 		
@@ -342,10 +458,18 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	 * @param node 循环结构结点
 	 */
 	private void loop(Node node){
+
 		//对逻辑运算结点进行分析
+		int firstSize = MiddleCode.middleCodes.size();
 		logic(node.getLinks().get(0));
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.JMP, getLogicName(node.getLinks().get(0)), null,null));
 		//对BLOCK结点进行分析
 		travelNode(node.getLinks().get(1));
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.JMP, "$false", null,firstSize-1));
+		int lastSize = MiddleCode.middleCodes.size();
+		MiddleCode.middleCodes.get(firstSize).setRes(lastSize);
+		
+		
 	}
 	
 	/**
@@ -358,6 +482,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		List<Node> childs = node.getLinks();
 		//左结点
 		Node left = childs.get(0);
+		Node operator = childs.get(1);
 		//右结点
 		Node right = childs.get(2);
 		NODE_TYPE left_type =null,right_type = null;
@@ -382,7 +507,36 @@ public class SemanticAnalysis implements TravelGrammarTree{
 				(left_type==NODE_TYPE.INT&&right_type==NODE_TYPE.REAL)||
 				(left_type==NODE_TYPE.REAL&&right_type==NODE_TYPE.INT)){
 			//中间代码
-		}
+			
+			Instructions instruction = null;
+			switch (operator.getValue()) {
+			case ">":
+				instruction = Instructions.GT;
+				break;
+			case "<":
+				instruction = Instructions.LT;
+				break;
+			case">=":
+				instruction = Instructions.GET;
+				break;
+			case"<=":
+				instruction = Instructions.LET;
+				break;
+			case"==":
+				instruction = Instructions.EQ;
+				break;
+			case"<>":
+				instruction = Instructions.NEQ;
+				break;
+
+			default:
+				break;
+			}
+			
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.BOOLEAN, getLogicName(node), null));
+			MiddleCode.middleCodes.add(new MiddleCode(instruction, getArithmeticName(left), getArithmeticName(right),getLogicName(node)));			
+		}	
+		
 		//如果不匹配
 		else{
 			ThrowMyException.throwMyExcepton(ErrorNum.MISMATCHED_TYPE_IN_LOGIC);
@@ -394,7 +548,21 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	 * @param node 输入语句结点，此处的输入语句为单独成句的read(),不参与赋值
 	 */
 	private void read(Node node){
-		
+		String inputType = node.getValue();
+		switch (inputType) {
+		case "A int from input.":
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, NODE_TYPE.INT, null, null));
+			break;
+		case "A real from input":
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, NODE_TYPE.REAL, null, null));
+			break;
+		case "A string from input.":
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.REA, NODE_TYPE.STRING, null, null));
+			break;
+
+		default:
+			break;
+		}
 	}
 	
 	/**
@@ -402,7 +570,16 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	 * @param node 输出语句结点，此处的输入语句为单独成句的write()
 	 */
 	private void write(Node node){
-		
+		Node content = node.getLinks().get(0);
+		if(content.getType()==NODE_TYPE.STRING_VAL){
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING, "$\""+content.getValue()+"\"", null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.WRI,"$\""+content.getValue()+"\"", null, null));
+		}
+		//如果是表达式
+		else{
+			arithmetic(content);
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.WRI,getArithmeticName(content), null, null));
+		}
 	}
 	
 
@@ -420,9 +597,13 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		//判断根结点类型,分两种情况，算数运算符或其他
 		switch (root.getType()) {
 		case INT_VAL:
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.INT, getArithmeticName(ari_node), null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, getArithmeticName(ari_node), Integer.valueOf(root.getValue()), null));
 			ari_type = NODE_TYPE.INT;			
 			break;
 		case REAL_VAL:
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL, getArithmeticName(ari_node), null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, getArithmeticName(ari_node), Double.valueOf(root.getValue()), null));
 			ari_type = NODE_TYPE.REAL;
 			break;
 		case IDENTIFIER:
@@ -450,6 +631,30 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			child_type1 = child_arithmetic(childs.get(0));
 			child_type2 = child_arithmetic(childs.get(1));
 			
+			getChildValue(childs.get(0));
+			getChildValue(childs.get(1));
+			
+			switch (root.getValue()) {
+			case "+":
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.ADD, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				break;
+			case"-":
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MIN, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+
+				break;
+			case"*":
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MUL, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+
+				break;
+			case"/":
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DIV, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+
+				break;
+			default:
+				break;
+			}
+
+			
 			if(child_type1==child_type2){
 				ari_type = child_type1;
 			}else {
@@ -461,9 +666,79 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			break;
 		}
 		
-		
+
 		return ari_type;
 	}
+	
+	/**
+	 * 递归函数，用于获得存储子表达式的值 的中间代码
+	 * @param ari_node 子表达式根结点
+	 */
+	private void getChildValue(Node root){
+		switch (root.getType()) {
+		case INT_VAL:
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.INT, "$"+getChildArithmeticElementName(root), null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$"+getChildArithmeticElementName(root), Integer.valueOf(root.getValue()), null));
+		
+			break;
+		case REAL_VAL:
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL, getArithmeticName(root), null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, getArithmeticName(root), Double.valueOf(root.getValue()), null));
+
+			break;
+		case IDENTIFIER:
+			NODE_TYPE t = identifier(root);
+			switch (t) {
+			case INT:
+			case REAL:
+			case STRING:
+
+				break;
+			default:
+				ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARITHMETIC);
+				break;
+			}
+			break;
+		case IDENTI_ARR_ELEMENT:
+			identi_arr_element(root);
+			break;
+		//如果是操作运算符
+		case ARI_OPERATOR:
+			//获取操作运算符的两个表达式子式
+			List<Node> childs = root.getLinks();
+			getChildValue(childs.get(0));
+			getChildValue(childs.get(1));
+			
+			
+			switch (root.getValue()) {
+			case "+":
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.ADD, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				break;
+			case"-":
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MIN, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+
+				break;
+			case"*":
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MUL, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+
+				break;
+			case"/":
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DIV, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+
+				break;
+			default:
+				break;
+			}
+
+			
+
+			break;
+		default:
+			ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARITHMETIC);
+			break;
+		}
+	}
+		
 	
 	/**
 	 * 递归函数，用于获得一个子表达式的类型 子表达式中不能再出现STRING类型
@@ -508,7 +783,6 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			NODE_TYPE child_type1 = null, child_type2 = null;
 			child_type1 = child_arithmetic(childs.get(0));
 			child_type2 = child_arithmetic(childs.get(1));
-
 			if (child_type1 == child_type2) {
 				ari_type = child_type1;
 			} else {
@@ -542,29 +816,6 @@ public class SemanticAnalysis implements TravelGrammarTree{
 				case STRING_VAL:
 					pre_type = NODE_TYPE.STRING;
 					break;
-				/*case IDENTIFIER:
-					//判断标识符是否已声明
-					if(!SymbolTable.symbolTable.containsKey(element.getValue())){
-						ThrowMyException.throwMyExcepton(ErrorNum.UNDECLARED_IDENTIFIER);
-					}
-					Variable identifier = SymbolTable.symbolTable.get(element.getValue());
-					//判断标识符是否已赋值
-					if(!identifier.isAssigned){
-						ThrowMyException.throwMyExcepton(ErrorNum.UNASSIGNED_IDENTIFIER);
-					}
-					switch (identifier.type) {
-					case INT:
-					case REAL:
-					case STRING:
-						pre_type = identifier.type;
-						break;
-
-					default:
-						ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_IN_ARRAY);
-						break;
-					}
-					
-					break;*/
 				case ARITHMETIC:
 					pre_type = arithmetic(element);
 					break;
@@ -665,6 +916,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_TYPE_FOR_ARR_INDEX);
 			break;
 		}
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.EOA, node.getLinks().get(0).getValue(), getArithmeticName(node.getLinks().get(1)), getArrEleName(node)));
 		
 		return type;
 	}
@@ -693,10 +945,178 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	}
 	
 	
+	/**
+	 * 获取一个算术表达式的中间变量命名
+	 * @param ari_node 算数表达式结点
+	 * @return 算术表达式中间变量命名
+	 */
+	private String getArithmeticName(Node ari_node){
+		String name = null;
+		// 获取二叉树的根结点
+		Node root = ari_node.getLinks().get(0);
+		// 判断根结点类型,分两种情况，算数运算符或其他
+		switch (root.getType()) {
+		case INT_VAL:
+			name = "$"+root.getValue();
+			break;
+		case REAL_VAL:
+			name = "$" + root.getValue();
+			break;
+		case IDENTIFIER:
+			name = root.getValue();
+			break;
+		case IDENTI_ARR_ELEMENT:
+			name = root.getLinks().get(0).getValue()+"["+ getChildArithmeticName(root.getLinks().get(1)) +"]";
+			break;
+		// 如果是操作运算符
+		case ARI_OPERATOR:
+			// 获取操作运算符的两个表达式子式
+			List<Node> childs = root.getLinks();
+			// 两个表达式子式的名字
+			name = "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1));
+			break;
+		default:
+			break;
+		}
+
+		return name;
+
+	}
 	
+	private String getChildArithmeticName(Node ari_node){
+		String name = null;
+		// 获取二叉树的根结点
+		Node root = ari_node.getLinks().get(0);
+		// 判断根结点类型,分两种情况，算数运算符或其他
+		switch (root.getType()) {
+		case INT_VAL:
+			name = root.getValue();
+			break;
+		case REAL_VAL:
+			name = root.getValue();
+			break;
+		case IDENTIFIER:
+			name = root.getValue();
+			break;
+		case IDENTI_ARR_ELEMENT:
+			name = root.getLinks().get(0).getValue()+"["+ getChildArithmeticName(root.getLinks().get(1)) +"]";
+			break;
+		// 如果是操作运算符
+		case ARI_OPERATOR:
+			// 获取操作运算符的两个表达式子式
+			List<Node> childs = root.getLinks();
+			// 两个表达式子式的名字
+			name = getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1));
+			break;
+		default:
+			break;
+		}
+
+		return name;
+	}
 	
+	/**
+	 * 获取一个算术表达式子式的中间变量命名
+	 * @param ari_node 算术表达式子式结点
+	 * @return 子式命名
+	 */
+	private String getChildArithmeticElementName(Node ari_node){
+		String name = null;
+
+		// 判断根结点类型,分两种情况，算数运算符或其他
+		switch (ari_node.getType()) {
+		case INT_VAL:
+			name = ari_node.getValue();
+			break;
+		case REAL_VAL:
+			name = ari_node.getValue();
+			break;
+		case IDENTIFIER:
+			name = ari_node.getValue();
+			break;
+		case IDENTI_ARR_ELEMENT:
+			name = ari_node.getLinks().get(0).getValue()+"["+ getChildArithmeticName(ari_node.getLinks().get(1)) +"]";
+			break;
+		// 如果是操作运算符
+		case ARI_OPERATOR:
+			// 获取操作运算符的两个表达式子式
+			List<Node> childs = ari_node.getLinks();
+			// 两个表达式子式的名字
+			name = getChildArithmeticElementName(childs.get(0))+ ari_node.getValue() +getChildArithmeticElementName(childs.get(1));
+			break;
+		default:
+			break;
+		}
+
+		return name;
+	}
+
 	
+	/**
+	 * 数组赋值
+	 * @param arr_node 数组节点
+	 * @param arr_type 数组类型
+	 * @param arr_name 数组名
+	 *
+	 */
+	private void mov_arr(Node arr_node,NODE_TYPE arr_type,String arr_name){
+		NODE_TYPE type = null;
+		switch (arr_type) {
+		case INT_ARR:
+			type = NODE_TYPE.INT;
+			break;
+		case REAL_ARR:
+			type = NODE_TYPE.REAL;
+			break;
+		case STRING_ARR:
+			type = NODE_TYPE.STRING;
+			break;
+		default:
+			break;
+		}
+		for (int i = 0; i < arr_node.getLinks().size(); i++) {
+			// 如果是STRING数组
+			if (type == NODE_TYPE.STRING_ARR) {
+				switch (arr_node.getLinks().get(i).getType()) {
+				case STRING_VAL:
+
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING,
+							"$\"" + arr_node.getLinks().get(i).getValue() + "\"", null));
+
+					MiddleCode.middleCodes
+							.add(new MiddleCode(Instructions.CON, "$\"" + arr_node.getLinks().get(i).getValue() + "\"",
+									arr_node.getLinks().get(i).getValue(), null));
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_STRING", arr_name, null));
+					break;
+				case ARITHMETIC:
+					arithmetic(arr_node.getLinks().get(i));
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, getArithmeticName(arr_node.getLinks().get(i)), arr_name, null));
+					break;
+				}
+
+			}
+			// 如果是int/real数组
+			else {
+				arithmetic(arr_node.getLinks().get(i));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, getArithmeticName(arr_node.getLinks().get(i)), arr_name, null));
+			}
+
+		}
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.END, null, null, null));
+
+	}
 	
+	private String getLogicName(Node node){
+		List<Node> childs = node.getLinks();
+		Node left = childs.get(0);
+		Node operator = childs.get(1);
+		Node right = childs.get(2);
+		return getArithmeticName(left)+operator.getValue()+getArithmeticName(right);
+	}
+	
+	private String getArrEleName(Node node){
+		return node.getLinks().get(0).getValue()+"["+getArithmeticName(node.getLinks().get(1))+"]";
+	}
 	
 	
 	

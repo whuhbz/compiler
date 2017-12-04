@@ -15,11 +15,15 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.HashMap;
 
 import javax.lang.model.type.NullType;
@@ -87,6 +91,8 @@ public class CompilerFrame extends JFrame {
 	private TextLineNumber tln;
 	/*滚动条*/
 	private JScrollPane scrollPane;
+	/* 语法树和中间代码面板 */
+	public static JTabbedPane treeAndMcodePanel;
 	/* 保存和打开对话框 */
 	private FileDialog filedialog_save, filedialog_load;
 	
@@ -104,7 +110,8 @@ public class CompilerFrame extends JFrame {
 	private static int time = 0;
 	/*保存控制台用户的输入*/
 	private static String str1,str2,userInput;
-	
+	/*字体*/
+	private Font editFont = new Font("微软雅黑", Font.PLAIN, 15);
 	public void initMenuBar() {
 		setLayout(null);
 		setJMenuBar(MENUBAR);
@@ -163,7 +170,7 @@ public class CompilerFrame extends JFrame {
 
 		add(TOOLBAR);
 		TOOLBAR.setBackground(new Color(155,155,155));
-		TOOLBAR.setBounds(0, 0, 1000, 24);
+		TOOLBAR.setBounds(0, 0, 1000, 27);
 		TOOLBAR.setPreferredSize(getPreferredSize());
 		// 设置状态条
 		add(STATUSBAR);
@@ -185,8 +192,8 @@ public class CompilerFrame extends JFrame {
 				filedialog_save.setVisible(false);
 			}
 		});
-		
-		 editPanel = new JPanel(null);
+		/*编辑区和控制台区*/
+		editPanel = new JPanel(null);
 		editPanel.setBackground(new Color(255,255,255));
 		
 	    editTabbedPane =new TabbedPaneUI();
@@ -196,6 +203,7 @@ public class CompilerFrame extends JFrame {
 		scrollPane.setRowHeaderView(tln);
 		editArea.getDocument().addUndoableEditListener(undoHandler);
 		editArea.getDocument().addDocumentListener(new SyntaxHighlighter(editArea));
+		editArea.setFont(editFont);
 		map.put(scrollPane, editArea);
 		editTabbedPane.add(scrollPane,"new1.cmm");
 		
@@ -208,14 +216,29 @@ public class CompilerFrame extends JFrame {
 		consolePane.setBackground(new Color(255, 255, 255));
 		JTabbedPane ConsolePanel=new JTabbedPane();
 		ConsolePanel.add(consolePane, "Console");
-		editTabbedPane.setBounds(0, 0, 795, 360);
-		ConsolePanel.setBounds(0, 360, 795, 245);
+		editTabbedPane.setBounds(0, 0, 695, 360);
+		
+		ConsolePanel.setBounds(0, 360, 695, 245);
 		editPanel.add(editTabbedPane);
 		editPanel.add(ConsolePanel);
+		editPanel.setBackground(getBackground());
 		add(editPanel);
-		editPanel.setBounds(0, TOOLBAR.getHeight(),795,600);
+		editPanel.setBounds(0, TOOLBAR.getHeight(),695,600);
 		editPanel.setPreferredSize(new Dimension(200, 120));
 		
+		/*语法树和中间代码区*/
+		JTextArea treearea=new JTextArea();
+		treearea.setEditable(false);
+		JTextArea Mcodearea=new JTextArea();
+		Mcodearea.setEditable(false);
+		JScrollPane treePanel = new JScrollPane(treearea);
+		JScrollPane McodePanel = new JScrollPane(Mcodearea);		
+		treeAndMcodePanel = new JTabbedPane(JTabbedPane.TOP,
+				JTabbedPane.SCROLL_TAB_LAYOUT);
+		treeAndMcodePanel.add(treePanel, "语法树");
+		treeAndMcodePanel.add(McodePanel, "中间代码");
+		treeAndMcodePanel.setBounds(editPanel.getWidth(), TOOLBAR.getHeight(), 250, editPanel.getHeight());
+		add(treeAndMcodePanel);
 		// 为菜单项添加事件监听器
 		newItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent paramActionEvent) {
@@ -278,7 +301,7 @@ public class CompilerFrame extends JFrame {
 		});
 		runButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				//run();
+				beforeRun();
 			}
 		});
 		searchButton.addActionListener(new ActionListener() {
@@ -317,8 +340,10 @@ public class CompilerFrame extends JFrame {
 						System.out.println(userInput);
 					}catch(Exception ex) {
 						
-					}
-					
+					}					
+				}
+				if(e.isControlDown()&&e.getKeyCode()==KeyEvent.VK_Z) {
+					undo();
 				}
 			}
 		});
@@ -354,6 +379,7 @@ public class CompilerFrame extends JFrame {
  		}
 
  		JTextPane editArea = new JTextPane();
+ 		editArea.setFont(editFont);
  		JScrollPane scrollPane = new JScrollPane(editArea);
  		TextLineNumber tln = new TextLineNumber(editArea);
  		scrollPane.setRowHeaderView(tln);
@@ -436,10 +462,12 @@ public class CompilerFrame extends JFrame {
 			}
 		}
 	}
-	
-	
+		
 	// 查找
 	private void search() {
+		if(editTabbedPane.getSelectedIndex()==-1) {
+			JOptionPane.showMessageDialog(this, "请新建文件");
+		}else {
 			JTextPane temp = map.get(editTabbedPane.getSelectedComponent());
 			if (text == null)
 				text = temp.getText();
@@ -467,13 +495,41 @@ public class CompilerFrame extends JFrame {
 				}
 			}
 		}
+			
+		}
 	// 设置字体
-		private void setFont() {
+	private void setFont() {
 			Font font = JFontDialog
 					.showDialog(getContentPane(), "字体设置", true, getFont());
 			for (int i = 0; i < editTabbedPane.getComponentCount(); i++)
 				map.get(editTabbedPane.getComponent(i)).setFont(font);
-		}
+	}
+	//运行预处理
+	private void beforeRun() {
+		BufferedWriter bw = null;
+        try {
+            OutputStream os = new FileOutputStream("src/cmmui/Test.txt");
+            bw = new BufferedWriter(new OutputStreamWriter(os));
+            for (String value : editArea.getText().split("\n")) {
+                bw.write(value);
+                //bw.newLine();//换行
+            }
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        } finally {
+            if (bw != null) {
+                try {
+                    bw.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+	}
+	//运行函数
+	private void run() {
+		
+	}
     public static void main(String[] args) {
     	//改变界面外观
     	try {  
@@ -481,7 +537,7 @@ public class CompilerFrame extends JFrame {
     		        "com.sun.java.swing.plaf.windows.WindowsLookAndFeel");  
         } catch (Exception e) {}  
     	CompilerFrame frame = new CompilerFrame("CMM解释器"); 
-		frame.setBounds(160,0, 800, 700);
+		frame.setBounds(160,0, 950, 700);
 		frame.setResizable(false);
 		frame.setVisible(true);
 	}

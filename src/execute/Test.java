@@ -29,5 +29,6 @@ public class Test {
 		oos.writeObject(new MiddleCode(Instructions.JMP, "c", null, 8));
 		oos.writeObject(new MiddleCode(Instructions.WRI, "a", null, null));
 		oos.writeObject(new MiddleCode(Instructions.WRI, "b", null, null));
+		
 	}
 }

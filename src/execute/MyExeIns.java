@@ -201,10 +201,30 @@ public class MyExeIns implements Execute.ExeIns {
 		Variable v2V = exe.getVarible((String) v2);
 		Variable resV = exe.getVarible((String) res);
 
-		if ((Double) (v1V.value) > (Double) (v2V.value)) {
-			resV.value = true;
-		} else {
-			resV.value = false;
+		if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
+			if ((Integer) (v1V.value) > (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			if ((Integer) (v1V.value) > (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			if ((Double) (v1V.value) > (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else {
+			if ((Double) (v1V.value) > (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
 		}
 		exe.counterPlusOne();
 	}
@@ -251,10 +271,30 @@ public class MyExeIns implements Execute.ExeIns {
 		Variable v2V = exe.getVarible((String) v2);
 		Variable resV = exe.getVarible((String) res);
 
-		if ((Double) (v1V.value) >= (Double) (v2V.value)) {
-			resV.value = true;
-		} else {
-			resV.value = false;
+		if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
+			if ((Integer) (v1V.value) >= (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			if ((Integer) (v1V.value) >= (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			if ((Double) (v1V.value) >= (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else {
+			if ((Double) (v1V.value) >= (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
 		}
 		exe.counterPlusOne();
 	}
@@ -266,10 +306,30 @@ public class MyExeIns implements Execute.ExeIns {
 		Variable v2V = exe.getVarible((String) v2);
 		Variable resV = exe.getVarible((String) res);
 
-		if ((Double) (v1V.value) <= (Double) (v2V.value)) {
-			resV.value = true;
-		} else {
-			resV.value = false;
+		if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
+			if ((Integer) (v1V.value) <= (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			if ((Integer) (v1V.value) <= (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			if ((Double) (v1V.value) <= (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else {
+			if ((Double) (v1V.value) <= (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
 		}
 		exe.counterPlusOne();
 	}
@@ -281,10 +341,30 @@ public class MyExeIns implements Execute.ExeIns {
 		Variable v2V = exe.getVarible((String) v2);
 		Variable resV = exe.getVarible((String) res);
 
-		if ((Double) (v1V.value) == (Double) (v2V.value)) {
-			resV.value = true;
-		} else {
-			resV.value = false;
+		if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
+			if ((Integer) (v1V.value) == (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			if (((Integer) (v1V.value)).intValue() == (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			if (((Double) (v1V.value)).doubleValue() == (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else {
+			if ((Double) (v1V.value) == (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
 		}
 		exe.counterPlusOne();
 	}
@@ -296,10 +376,30 @@ public class MyExeIns implements Execute.ExeIns {
 		Variable v2V = exe.getVarible((String) v2);
 		Variable resV = exe.getVarible((String) res);
 
-		if ((Double) (v1V.value) != (Double) (v2V.value)) {
-			resV.value = true;
-		} else {
-			resV.value = false;
+		if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
+			if ((Integer) (v1V.value) != (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			if (((Integer) (v1V.value)).intValue() < (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else if(v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			if (((Double) (v1V.value)).doubleValue() != (Integer) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
+		}else {
+			if ((Double) (v1V.value) != (Double) (v2V.value)) {
+				resV.value = true;
+			} else {
+				resV.value = false;
+			}
 		}
 		exe.counterPlusOne();
 	}

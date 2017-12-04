@@ -373,6 +373,10 @@ public class GrammerAnalysis {
 		String identifier = preWord.getValue();
 		Word word = nextWord();
 
+		if(word == null) {
+			ThrowMyException.throwMyExcepton(ErrorNum.ILLEGAL_END);
+		}
+		
 		if (word.getType() == TokenType.LEFT_MEDIUM_BRACKET) {
 			word = nextWord();
 			Node indexNode = oneArithmetic(word);

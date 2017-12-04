@@ -14,7 +14,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -25,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.HashMap;
 
 import javax.swing.ImageIcon;
@@ -45,14 +43,11 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.event.UndoableEditListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import javax.swing.tree.TreeNode;
-import javax.swing.undo.UndoManager;
 
 import execute.Execute;
 import grammar.GrammerAnalysis;
@@ -85,8 +80,6 @@ public class CompilerFrame extends JFrame {
 	private JMenuItem openItem;
 	private JMenuItem saveItem;
 	private JMenuItem exitItem;
-	private JMenuItem undoItem;
-	private JMenuItem searchItem;
 	private JMenuItem fontItem;
 	private JMenuItem runItem;
 	private JMenuItem aboutItem;
@@ -94,7 +87,6 @@ public class CompilerFrame extends JFrame {
 	private JButton newButton;
 	private JButton saveButton;
 	private JButton runButton;
-	private JButton searchButton;
 	/* 编辑部分面板 */
 	private TabbedPaneUI editTabbedPane;
 	private JTextPane editArea;
@@ -115,11 +107,6 @@ public class CompilerFrame extends JFrame {
 	private FileDialog filedialog_save, filedialog_load;
 
 	private static HashMap<JScrollPane, JTextPane> map = new HashMap<JScrollPane, JTextPane>();
-	/* Undo管理器 */
-	private final UndoManager undo = new UndoManager();
-	private UndoableEditListener undoHandler = new UndoHandler();
-	/* 保存要查找的字符串 */
-	private static String findStr = null;
 	/* 当前文本编辑区字符串 */
 	private static String text = null;
 	/* 当前选择的文本的位置 */
@@ -166,12 +153,7 @@ public class CompilerFrame extends JFrame {
 		fileMenu.add(saveItem);
 		fileMenu.addSeparator();
 		fileMenu.add(exitItem);
-		// 为编辑菜单添加子项
-		undoItem = new JMenuItem("撤  销");
-		searchItem = new JMenuItem("查  找");
 		fontItem = new JMenuItem("字体");
-		editMenu.add(undoItem);
-		editMenu.add(searchItem);
 		editMenu.add(fontItem);
 		// 为设置菜单添加子项
 		runItem = new JMenuItem("运行");
@@ -189,9 +171,6 @@ public class CompilerFrame extends JFrame {
 		runButton = new JButton(
 				new ImageIcon(getClass().getResource("/images/run.png")));
 		runButton.setToolTipText("运行");
-		searchButton = new JButton(
-				new ImageIcon(getClass().getResource("/images/search.png")));
-		searchButton.setToolTipText("查找");
 		TOOLBAR.setFloatable(false);
 		TOOLBAR.add(newButton);
 		TOOLBAR.addSeparator();
@@ -199,7 +178,6 @@ public class CompilerFrame extends JFrame {
 		TOOLBAR.addSeparator();
 		TOOLBAR.add(runButton);
 		TOOLBAR.addSeparator();
-		TOOLBAR.add(searchButton);
 
 		add(TOOLBAR);
 		TOOLBAR.setBackground(new Color(155, 155, 155));
@@ -218,12 +196,15 @@ public class CompilerFrame extends JFrame {
 		initMenuBar();
 		// 文件保存和打开对话框
 		filedialog_save = new FileDialog(this, "保存文件", FileDialog.SAVE);
+		
 		filedialog_save.setVisible(false);
 		filedialog_load = new FileDialog(this, "打开文件", FileDialog.LOAD);
 		filedialog_load.setVisible(false);
+		filedialog_load.setDirectory("srcFolder");
 		filedialog_save.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 				filedialog_save.setVisible(false);
+				filedialog_load.setDirectory("srcFolder");
 			}
 		});
 		/* 编辑区和控制台区 */
@@ -235,7 +216,6 @@ public class CompilerFrame extends JFrame {
 		scrollPane = new JScrollPane(editArea);
 		tln = new TextLineNumber(editArea);
 		scrollPane.setRowHeaderView(tln);
-		editArea.getDocument().addUndoableEditListener(undoHandler);
 		editArea.getDocument()
 				.addDocumentListener(new SyntaxHighlighter(editArea));
 		editArea.setFont(editFont);
@@ -309,16 +289,6 @@ public class CompilerFrame extends JFrame {
 				System.exit(0);
 			}
 		});
-		undoItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				undo();
-			}
-		});
-		searchItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				search();
-			}
-		});
 		fontItem.addActionListener(new ActionListener() {
 
 			@Override
@@ -334,7 +304,7 @@ public class CompilerFrame extends JFrame {
 		});
 		aboutItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(null, "java", "CMM解释器器",
+				JOptionPane.showMessageDialog(null, "CMM语言解释器1.0,基于JAVA\n作者：LYQ,MY,HBZ,JZW", "CMM解释器",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
@@ -357,11 +327,6 @@ public class CompilerFrame extends JFrame {
 		runButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				run();
-			}
-		});
-		searchButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				search();
 			}
 		});
 		consoleArea.addKeyListener(new KeyListener() {
@@ -407,8 +372,26 @@ public class CompilerFrame extends JFrame {
 						ex.printStackTrace();
 					}
 				}
-				if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_Z) {
-					undo();
+				if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_S) {
+					if(editTabbedPane.getSelectedIndex() == -1) {
+						return;
+					}
+					
+					String str = map.get(editTabbedPane.getSelectedComponent()).getText();
+					
+					if(str == null && !str.trim().equals("")) {
+						return;
+					}
+					
+					if(isEdited) {
+						try {
+							commonSave();
+							JOptionPane.showMessageDialog(CompilerFrame.this, "保存成功");
+						} catch (IOException ee) {
+							// TODO Auto-generated catch block
+							ee.printStackTrace();
+						}
+					}
 				}
 			}
 		});
@@ -424,12 +407,6 @@ public class CompilerFrame extends JFrame {
 		}
 	}
 
-	// 内部类：Undo管理
-	class UndoHandler implements UndoableEditListener {
-		public void undoableEditHappened(UndoableEditEvent e) {
-			undo.addEdit(e.getEdit());
-		}
-	}
 
 	// 新建
 	private void create(String filename) {
@@ -451,7 +428,6 @@ public class CompilerFrame extends JFrame {
 		JScrollPane scrollPane = new JScrollPane(editArea);
 		TextLineNumber tln = new TextLineNumber(editArea);
 		scrollPane.setRowHeaderView(tln);
-		editArea.getDocument().addUndoableEditListener(undoHandler);
 		editArea.getDocument()
 				.addDocumentListener(new SyntaxHighlighter(editArea));
 		map.put(scrollPane, editArea);
@@ -513,7 +489,7 @@ public class CompilerFrame extends JFrame {
 		commonSave();
 		
 		JOptionPane.showMessageDialog(this, "保存成功");
-		isEdited = false;
+		
 	}
 	
 	private void commonSave() throws IOException {
@@ -524,52 +500,7 @@ public class CompilerFrame extends JFrame {
 		FileWriter fw = new FileWriter(srcFile);
 		fw.write(map.get(editTabbedPane.getSelectedComponent()).getText());
 		fw.close();
-	}
-
-	// 撤销
-	private void undo() {
-		if (undo.canUndo()) {
-			try {
-				undo.undo();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	// 查找
-	private void search() {
-		if (editTabbedPane.getSelectedIndex() == -1) {
-			JOptionPane.showMessageDialog(this, "请新建文件");
-		} else {
-			JTextPane temp = map.get(editTabbedPane.getSelectedComponent());
-			if (text == null)
-				text = temp.getText();
-			if (findStr == null)
-				findStr = JOptionPane.showInputDialog(this, "请输入要找的字符串!");
-			if (findStr != null) {
-				position = text.indexOf(findStr);
-				if (text.equals("")) {
-					JOptionPane.showMessageDialog(this, "没有你要查找的字符串！");
-					findStr = null;
-				} else {
-					if (position != -1) {
-						temp.select(position + findStr.length() * time,
-								position + findStr.length() * (time + 1));
-						temp.setSelectedTextColor(Color.RED);
-						text = new String(
-								text.substring(position + findStr.length()));
-						time += 1;
-					} else {
-						JOptionPane.showMessageDialog(this, "没有你要查找的字符串！");
-						time = 0;
-						text = null;
-						findStr = null;
-					}
-				}
-			}
-		}
-
+		isEdited = false;
 	}
 
 	// 设置字体
@@ -606,6 +537,12 @@ public class CompilerFrame extends JFrame {
 	// 运行函数
 	private void run() {
 		if(editTabbedPane.getSelectedIndex() == -1) {
+			return;
+		}
+		
+		String str = map.get(editTabbedPane.getSelectedComponent()).getText();
+		
+		if(str == null && !str.trim().equals("")) {
 			return;
 		}
 		

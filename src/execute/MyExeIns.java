@@ -513,6 +513,7 @@ public class MyExeIns implements Execute.ExeIns {
 		// TODO Auto-generated method stub
 		Variable v1V = exe.getVarible((String) v1);
 		v1V.isAssigned = true;
+		exe.counterPlusOne();
 	}
 
 	@Override

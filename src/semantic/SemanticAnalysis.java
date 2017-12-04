@@ -574,6 +574,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		Node content = node.getLinks().get(0);
 		if(content.getType()==NODE_TYPE.STRING_VAL){
 			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING, "$\""+content.getValue()+"\"", null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON,"$\""+content.getValue()+"\"", content.getValue(), null));
 			MiddleCode.middleCodes.add(new MiddleCode(Instructions.WRI,"$\""+content.getValue()+"\"", null, null));
 		}
 		//如果是表达式
@@ -1088,6 +1089,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		for (int i = 0; i < arr_node.getLinks().size(); i++) {
 			// 如果是STRING数组
 			if (type == NODE_TYPE.STRING_ARR) {
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING, arr_name+"["+i+"]", null));
 				switch (arr_node.getLinks().get(i).getType()) {
 				case STRING_VAL:
 
@@ -1108,6 +1110,12 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			}
 			// 如果是int/real数组
 			else {
+				if(type==NODE_TYPE.INT){
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.INT, arr_name+"["+i+"]", null));
+				}else{
+					MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL, arr_name+"["+i+"]", null));
+
+				}
 				arithmetic(arr_node.getLinks().get(i));
 				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, getArithmeticName(arr_node.getLinks().get(i)), arr_name, null));
 			}

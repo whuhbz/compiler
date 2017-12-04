@@ -190,12 +190,12 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			SymbolTable.symbolTable.get(variableName).isAssigned = true;
 		
 			MiddleCode.middleCodes.add(
-					new MiddleCode(Instructions.DEC, NODE_TYPE.STRING, "$\"" + childs.get(3).getValue() + "\"", null));
+					new MiddleCode(Instructions.DEC, NODE_TYPE.STRING, "$" + childs.get(3).getValue() , null));
 
-			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$\"" + childs.get(3).getValue() + "\"",
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$" + childs.get(3).getValue() ,
 					childs.get(3).getValue(), null));
 			MiddleCode.middleCodes
-					.add(new MiddleCode(Instructions.MOV, "$\"" + childs.get(3).getValue() + "\"", variableName, null));
+					.add(new MiddleCode(Instructions.MOV, "$" + childs.get(3).getValue(), variableName, null));
 
 			break;
 		//如果是数组
@@ -326,17 +326,17 @@ public class SemanticAnalysis implements TravelGrammarTree{
 				ThrowMyException.throwMyExcepton(ErrorNum.MISSMATCHED_DATA_TYPE);
 			}
 			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING,
-					"$\"" + childs.get(2).getValue() + "\"", null));
+					"$" + childs.get(2).getValue(), null));
 
-			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$\"" + childs.get(2).getValue() + "\"",
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$" + childs.get(2).getValue(),
 					childs.get(2).getValue(), null));
 			if(type==0){
 				
 				MiddleCode.middleCodes.add(
-						new MiddleCode(Instructions.MOV, "$\"" + childs.get(2).getValue() + "\"", variableName, null));
+						new MiddleCode(Instructions.MOV, "$" + childs.get(2).getValue() + "", variableName, null));
 			}else {
 				MiddleCode.middleCodes.add(
-						new MiddleCode(Instructions.MOV, "$\"" + childs.get(2).getValue() + "\"", variableName, index));
+						new MiddleCode(Instructions.MOV, "$" + childs.get(2).getValue() + "", variableName, index));
 			}
 			
 			break;
@@ -583,9 +583,9 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	private void write(Node node){
 		Node content = node.getLinks().get(0);
 		if(content.getType()==NODE_TYPE.STRING_VAL){
-			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING, "$\""+content.getValue()+"\"", null));
-			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON,"$\""+content.getValue()+"\"", content.getValue(), null));
-			MiddleCode.middleCodes.add(new MiddleCode(Instructions.WRI,"$\""+content.getValue()+"\"", null, null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING, "$"+content.getValue(), null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON,"$"+content.getValue(), content.getValue(), null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.WRI,"$"+content.getValue(), null, null));
 		}
 		//如果是表达式
 		else{
@@ -1106,10 +1106,10 @@ public class SemanticAnalysis implements TravelGrammarTree{
 				case STRING_VAL:
 
 					MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.STRING,
-							"$\"" + arr_node.getLinks().get(i).getValue() + "\"", null));
+							"$" + arr_node.getLinks().get(i).getValue(), null));
 
 					MiddleCode.middleCodes
-							.add(new MiddleCode(Instructions.CON, "$\"" + arr_node.getLinks().get(i).getValue() + "\"",
+							.add(new MiddleCode(Instructions.CON, "$" + arr_node.getLinks().get(i).getValue(),
 									arr_node.getLinks().get(i).getValue(), null));
 					MiddleCode.middleCodes.add(new MiddleCode(Instructions.MOV, "$IN_STRING", arr_name, null));
 					break;

@@ -1,7 +1,7 @@
 package constant;
 
 public enum ErrorNum {
-	ILLEGAL_END("Illegal end character."),ILLEGAL_ESCAPE("Illegal escape character"),
+	ILLEGAL_END("Illegal end of source file."),ILLEGAL_ESCAPE("Illegal escape character"),
 	ILLEGAL_STRING("Illegal string."),ILLEGAL_NUMBER("Illegal number."),
 	ILLEGAL_BOOLEAN("Illegal boolean."),ILLEGAL_NULL("Illegal null."),
 	ILLEGAL_CHAR_SEQUENCE("Charsequence that are not valid."),EMPTY_DOC("Document is empty."),

@@ -1,5 +1,6 @@
 package semantic;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -413,9 +414,16 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	 * @param node 逻辑结构结点
 	 */
 	private void select(Node node){
+		List<Integer> indexes = new ArrayList<>();
 		//size
 		for(Node branch: node.getLinks()){
-			one_select_branch(branch);
+			indexes.add(one_select_branch(branch));
+		}
+		int lastSize = MiddleCode.middleCodes.size();
+		for(int index : indexes){
+			if(index!=-1){
+				MiddleCode.middleCodes.get(index).setRes(lastSize);	
+			}
 		}
 		
 	}
@@ -426,12 +434,13 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	 * 对于 else{} 子节点序列： BLOCk
 	 * @param node 逻辑分支结点
 	 */
-	private void one_select_branch(Node node){
+	private int one_select_branch(Node node){
 		//根据逻辑分支类型进行分析
 		//如果是else
 		if(node.getLinks().size()==1){
 			//对BLOCK结点进行分析
 			travelNode(node.getLinks().get(0));
+			return -1;
 		}
 		//如果是if或elif
 		else{
@@ -445,9 +454,10 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			MiddleCode.middleCodes.add(new MiddleCode(Instructions.JMP, getLogicName(logic), null, null));
 			//对BLOCK结点进行分析
 			travelNode(node.getLinks().get(1));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.JMP, "$false", null, null));
 			int lastSize = MiddleCode.middleCodes.size();
 			MiddleCode.middleCodes.get(firstSize).setRes(lastSize);
-		
+			return lastSize-1;
 		}
 		
 	}
@@ -638,8 +648,10 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			String pattern = "[a-zA-Z][a-zA-Z0-9]*";
 			String name1 = getChildArithmeticElementName(childs.get(0));
 			String name2 = getChildArithmeticElementName(childs.get(1));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL, getArithmeticName(ari_node), null));
 			if(!Pattern.matches(pattern, name1)) name1 = "$"+name1;
 			if(!Pattern.matches(pattern, name2)) name2 = "$"+name2;
+			
 			switch (root.getValue()) {
 			
 			case "+":

@@ -565,9 +565,11 @@ public class CompilerFrame extends JFrame {
 		String fileName = "srcFolder/" + fn;
 		String needMiddleName = "mcFolder/" + fn.substring(0, fn.lastIndexOf("."))
 				+ "_mc.txt";
+		String needTreeName = "trFolder/" + fn.substring(0,fn.lastIndexOf(".")) + "_tr.txt";
 
 		File srcFile = new File(fileName);
 		File mcFile = new File(needMiddleName);
+		File trFile = new File(needTreeName);
 		
 		
 
@@ -576,7 +578,7 @@ public class CompilerFrame extends JFrame {
 		}
 
 		if (!mcFile.exists()
-				|| srcFile.lastModified() > mcFile.lastModified()) {
+				|| srcFile.lastModified() > mcFile.lastModified()||!trFile.exists()|| srcFile.lastModified() > trFile.lastModified()) {
 			try {
 				InputStream is = null;
 				try {
@@ -586,11 +588,16 @@ public class CompilerFrame extends JFrame {
 				}
 				GrammerAnalysis ga = new GrammerAnalysis(is);
 				Node root = ga.oneProgram();
+				String tree = new FormatGrammarTree().travel(root);
+				treearea.append(tree);
 				SemanticAnalysis semanticAnalysis = new SemanticAnalysis();
 				semanticAnalysis.travel(root);
 				SymbolTable.symbolTable.clear();
 				try {
 					MiddleCode.outPutToFile(needMiddleName);
+					OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(needTreeName));
+					writer.write(tree);
+					writer.flush();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					SimpleAttributeSet attr = new SimpleAttributeSet();
@@ -604,7 +611,7 @@ public class CompilerFrame extends JFrame {
 					}
 				}
 
-				Execute exe = new Execute(needMiddleName);
+				Execute exe = new Execute(needMiddleName,needTreeName);
 				new Thread(exe).start();
 
 
@@ -625,7 +632,7 @@ public class CompilerFrame extends JFrame {
 		}	//存在中间文件代码且最新
 		else {
 			
-			Execute exe = new Execute(needMiddleName);
+			Execute exe = new Execute(needMiddleName,needTreeName);
 			new Thread(exe).start();
 			
 			

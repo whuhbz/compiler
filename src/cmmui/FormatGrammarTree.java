@@ -30,7 +30,7 @@ public class FormatGrammarTree {
 		return stringBuffer.toString();
 
 		
-	
+	    
 	}
 	
 	/**

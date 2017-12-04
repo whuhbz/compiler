@@ -1,8 +1,11 @@
 package execute;
 
+import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +24,7 @@ public class Execute implements Runnable{
 	}
 
 	private ObjectInputStream ois = null;
+	private BufferedReader treeReader = null;
 	private int counter = 0; // 程序计数器
 	public List<MiddleCode> codeList = new ArrayList<MiddleCode>();
 	private ExeIns exeIns = new MyExeIns();
@@ -59,9 +63,9 @@ public class Execute implements Runnable{
 		counter++;
 	}
 
-	public Execute(String fileName) {
+	public Execute(String MCfileName,String treeFileName) {
 		try {
-			loadMiddleCodes(fileName);
+			loadMiddleCodes(MCfileName,treeFileName);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -69,9 +73,11 @@ public class Execute implements Runnable{
 	}
 
 	// 加载中间代码文件
-	private void loadMiddleCodes(String fileName) throws IOException {
+	private void loadMiddleCodes(String fileName,String treeFileName) throws IOException {
 		FileInputStream fis = new FileInputStream(fileName);
 		ois = new ObjectInputStream(fis);
+		treeReader = new BufferedReader(new FileReader(treeFileName));
+	
 	}
 
 	// 从输入流中获取下一条中间代码
@@ -96,14 +102,30 @@ public class Execute implements Runnable{
 			mc = getNextCode();
 		}
 		CompilerFrame.frame.Mcodearea.setText("");
+		CompilerFrame.frame.treearea.setText("");
 		int i = 0;
 		for (MiddleCode mco : codeList) {	
 			CompilerFrame.frame.Mcodearea.append(i++  + " " + mco.toString() + "\n");
 		}
 	}
+	
+	//加载语法树
+	private void loadTree(){
+		String tree = null;
+		try {
+			while((tree = treeReader.readLine())!=null){
+				CompilerFrame.frame.treearea.append(tree+"\n");
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 
+	}
 
 	public void execute() throws ClassNotFoundException, IOException {
 		loadAllCodes();
+		loadTree();
 		resetCounter();
 
 		while (counter < codeList.size()) {

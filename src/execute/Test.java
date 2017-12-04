@@ -12,8 +12,8 @@ public class Test {
 	
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		output();
-		Execute exe = new Execute("test2.txt");
+		//output();
+		Execute exe = new Execute("test.txt");
 		exe.execute();
 	}
 	

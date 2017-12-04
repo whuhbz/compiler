@@ -1,5 +1,6 @@
 package grammar;
 
+import cmmui.CompilerFrame;
 import system.Node;
 
 public class SimpleTravel2 implements TravelGrammarTree {

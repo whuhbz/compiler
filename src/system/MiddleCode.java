@@ -74,11 +74,11 @@ public class MiddleCode implements Serializable{
 			value4 = res.toString();
 		}
 		
-		return ins.toString()+"\t"+value2+"\t"+value3+"\t"+value4;
+		return middleCodes.indexOf(this)+"  "+ ins.toString()+"  "+value2+"  "+value3+"  "+value4;
 	}
 	
 	public static void outPutToFile(String fileName) throws IOException{
-		FileOutputStream fileOutputStream = new FileOutputStream("test_my.txt");
+		FileOutputStream fileOutputStream = new FileOutputStream(fileName);
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
 		for(MiddleCode mc : middleCodes){
 			objectOutputStream.writeObject(mc);

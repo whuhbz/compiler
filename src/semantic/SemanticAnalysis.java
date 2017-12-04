@@ -1,6 +1,7 @@
 package semantic;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import constant.ErrorNum;
 import constant.Instructions;
@@ -633,21 +634,26 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			
 			getChildValue(childs.get(0));
 			getChildValue(childs.get(1));
-			
+			String pattern = "[a-zA-Z][a-zA-Z0-9]*";
+			String name1 = getChildArithmeticElementName(childs.get(0));
+			String name2 = getChildArithmeticElementName(childs.get(1));
+			if(!Pattern.matches(pattern, name1)) name1 = "$"+name1;
+			if(!Pattern.matches(pattern, name2)) name2 = "$"+name2;
 			switch (root.getValue()) {
+			
 			case "+":
-				MiddleCode.middleCodes.add(new MiddleCode(Instructions.ADD, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.ADD, name1, name2, "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
 				break;
 			case"-":
-				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MIN, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MIN, name1, name2, "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
 
 				break;
 			case"*":
-				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MUL, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MUL, name1, name2, "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
 
 				break;
 			case"/":
-				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DIV, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DIV, name1, name2, "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
 
 				break;
 			default:
@@ -682,8 +688,8 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		
 			break;
 		case REAL_VAL:
-			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL, getArithmeticName(root), null));
-			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, getArithmeticName(root), Double.valueOf(root.getValue()), null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL, "$"+getArithmeticName(root), null));
+			MiddleCode.middleCodes.add(new MiddleCode(Instructions.CON, "$"+getArithmeticName(root), Double.valueOf(root.getValue()), null));
 
 			break;
 		case IDENTIFIER:
@@ -709,21 +715,26 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			getChildValue(childs.get(0));
 			getChildValue(childs.get(1));
 			
+			String pattern = "[a-zA-Z][a-zA-Z0-9]*";
+			String name1 = getChildArithmeticElementName(childs.get(0));
+			String name2 = getChildArithmeticElementName(childs.get(1));
+			if(!Pattern.matches(pattern, name1)) name1 = "$"+name1;
+			if(!Pattern.matches(pattern, name2)) name2 = "$"+name2;
 			
 			switch (root.getValue()) {
 			case "+":
-				MiddleCode.middleCodes.add(new MiddleCode(Instructions.ADD, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.ADD, name1, name2, "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
 				break;
 			case"-":
-				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MIN, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MIN, name1, name2, "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
 
 				break;
 			case"*":
-				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MUL, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.MUL, name1, name2, "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
 
 				break;
 			case"/":
-				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DIV, "$"+getChildArithmeticElementName(childs.get(0)), "$"+getChildArithmeticElementName(childs.get(1)), "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DIV, name1, name2, "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
 
 				break;
 			default:
@@ -1115,7 +1126,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 	}
 	
 	private String getArrEleName(Node node){
-		return node.getLinks().get(0).getValue()+"["+getArithmeticName(node.getLinks().get(1))+"]";
+		return node.getLinks().get(0).getValue()+"["+getArithmeticName(node.getLinks().get(1)).substring(1,getArithmeticName(node.getLinks().get(1)).length())+"]";
 	}
 	
 	

@@ -12,7 +12,7 @@ import semantic.Variable;
 import system.MiddleCode;
 import system.Node.NODE_TYPE;
 
-public class Execute {
+public class Execute implements Runnable{
 
 	public static void main(String[] args)
 			throws IOException, ClassNotFoundException {
@@ -149,5 +149,19 @@ public class Execute {
 		void forEOA(Execute exe, Object v1, Object v2, Object res);
 		
 		void forCON(Execute exe, Object v1, Object v2, Object res);
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		try {
+			execute();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

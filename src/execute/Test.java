@@ -13,7 +13,7 @@ public class Test {
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		//output();
-		Execute exe = new Execute("test.txt");
+		Execute exe = new Execute("test_my.txt");
 		exe.execute();
 	}
 	

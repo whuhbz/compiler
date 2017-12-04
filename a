@@ -1,0 +1,11 @@
+{	
+int j = 1;
+int i = 2;
+while(i>j){
+	i = read(int);
+}
+write(i);
+
+
+
+}

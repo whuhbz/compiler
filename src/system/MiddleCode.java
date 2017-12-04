@@ -74,7 +74,7 @@ public class MiddleCode implements Serializable{
 			value4 = res.toString();
 		}
 		
-		return middleCodes.indexOf(this)+"  "+ ins.toString()+"  "+value2+"  "+value3+"  "+value4;
+		return ins.toString()+"  "+value2+"  "+value3+"  "+value4;
 	}
 	
 	public static void outPutToFile(String fileName) throws IOException{

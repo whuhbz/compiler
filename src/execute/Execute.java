@@ -7,6 +7,7 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import cmmui.CompilerFrame;
 import semantic.SymbolTable;
 import semantic.Variable;
 import system.MiddleCode;
@@ -21,7 +22,7 @@ public class Execute implements Runnable{
 
 	private ObjectInputStream ois = null;
 	private int counter = 0; // 程序计数器
-	private List<MiddleCode> codeList = new ArrayList<MiddleCode>();
+	public List<MiddleCode> codeList = new ArrayList<MiddleCode>();
 	private ExeIns exeIns = new MyExeIns();
 	private SymbolTable symbolTable = new SymbolTable();
 
@@ -93,6 +94,11 @@ public class Execute implements Runnable{
 		while (mc != null) {
 			codeList.add(mc);
 			mc = getNextCode();
+		}
+		CompilerFrame.frame.Mcodearea.setText("");
+		int i = 0;
+		for (MiddleCode mco : codeList) {	
+			CompilerFrame.frame.Mcodearea.append(i++  + " " + mco.toString() + "\n");
 		}
 	}
 

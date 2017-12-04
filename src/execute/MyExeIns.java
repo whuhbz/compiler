@@ -419,6 +419,7 @@ public class MyExeIns implements Execute.ExeIns {
 			CompilerFrame.frame.d.insertString(
 					CompilerFrame.frame.d.getLength(), v1V.value.toString(),
 					attr);
+			CompilerFrame.frame.consoleArea.setCaretPosition(CompilerFrame.frame.d.getLength());
 		} catch (BadLocationException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

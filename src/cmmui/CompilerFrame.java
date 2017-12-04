@@ -61,6 +61,8 @@ import system.MyException;
 import system.Node;
 
 public class CompilerFrame extends JFrame {
+	
+	
 	public static CompilerFrame frame;
 	/* 窗体菜单栏 */
 	private final static JMenuBar MENUBAR = new JMenuBar();
@@ -129,7 +131,7 @@ public class CompilerFrame extends JFrame {
 	public static Execute.ExeIns ee = null;
 
 	public JTextArea treearea;
-	public JTextArea Mcodearea;
+	public static JTextArea Mcodearea;
 	/* 字体 */
 	private Font editFont = new Font("微软雅黑", Font.PLAIN, 15);
 	public TreeNode treenode;
@@ -490,13 +492,19 @@ public class CompilerFrame extends JFrame {
 	// 保存
 	private void save() throws IOException {
 
-		String fileName = editTabbedPane
+		if(editTabbedPane.getSelectedIndex() == -1) {
+			return;
+		}
+		
+		String fileName = "srcFolder/" + editTabbedPane
 				.getTitleAt(editTabbedPane.getSelectedIndex());
 		File srcFile = new File(fileName);
 
 		FileWriter fw = new FileWriter(srcFile);
 		fw.write(map.get(editTabbedPane.getSelectedComponent()).getText());
 		fw.close();
+		
+		JOptionPane.showMessageDialog(this, "保存成功");
 	}
 
 	// 撤销
@@ -578,15 +586,25 @@ public class CompilerFrame extends JFrame {
 
 	// 运行函数
 	private void run() {
+		if(editTabbedPane.getSelectedIndex() == -1) {
+			return;
+		}
+		
 		SymbolTable.symbolTable.clear();
+		MiddleCode.middleCodes.clear();
+		
+		
 		consoleArea.setText(null);
-		String fileName = editTabbedPane
+		String fn = editTabbedPane
 				.getTitleAt(editTabbedPane.getSelectedIndex());
-		String needMiddleName = fileName.substring(0, fileName.lastIndexOf("."))
+		String fileName = "srcFolder/" + fn;
+		String needMiddleName = "mcFolder/" + fn.substring(0, fn.lastIndexOf("."))
 				+ "_mc.txt";
 
 		File srcFile = new File(fileName);
 		File mcFile = new File(needMiddleName);
+		
+		
 
 		if (!srcFile.exists()) {
 			return;
@@ -607,26 +625,23 @@ public class CompilerFrame extends JFrame {
 				semanticAnalysis.travel(root);
 				SymbolTable.symbolTable.clear();
 				try {
-					MiddleCode.outPutToFile(mcFile.getName());
+					MiddleCode.outPutToFile(needMiddleName);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					SimpleAttributeSet attr = new SimpleAttributeSet();
 					StyleConstants.setForeground(attr, Color.red);
 					try {
 						d.insertString(d.getLength(), e.getMessage(), attr);
+						consoleArea.setCaretPosition(d.getLength());
 					} catch (BadLocationException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 				}
 
-				Execute exe = new Execute(mcFile.getName());
+				Execute exe = new Execute(needMiddleName);
 				new Thread(exe).start();
 
-				for (MiddleCode mc : MiddleCode.middleCodes) {
-					System.out.println(mc);
-					Mcodearea.append(mc.toString() + "\n");
-				}
 
 				MiddleCode.middleCodes.clear();
 			} catch (MyException me) {
@@ -642,6 +657,14 @@ public class CompilerFrame extends JFrame {
 			} finally {
 				MiddleCode.middleCodes.clear();
 			}
+		}	//存在中间文件代码且最新
+		else {
+			
+			Execute exe = new Execute(needMiddleName);
+			new Thread(exe).start();
+			
+			
+			MiddleCode.middleCodes.clear();
 		}
 
 	}

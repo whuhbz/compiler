@@ -1,11 +1,17 @@
 package execute;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectOutputStream;
 
+import cmmui.FormatGrammarTree;
 import constant.Instructions;
+import grammar.GrammerAnalysis;
 import system.MiddleCode;
+import system.Node;
 import system.Node.NODE_TYPE;
 
 public class Test {
@@ -13,8 +19,18 @@ public class Test {
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		//output();
-		Execute exe = new Execute("test_my.txt");
-		exe.execute();
+//		Execute exe = new Execute("test_my.txt");
+//		exe.execute();
+		InputStream is = null;
+		try {
+			is = new FileInputStream("test.cmm");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		GrammerAnalysis ga = new GrammerAnalysis(is);
+		Node root = ga.oneProgram();
+		System.out.println(new FormatGrammarTree().travel(root));
+
 	}
 	
 	public static void output() throws IOException {

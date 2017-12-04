@@ -465,7 +465,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		MiddleCode.middleCodes.add(new MiddleCode(Instructions.JMP, getLogicName(node.getLinks().get(0)), null,null));
 		//对BLOCK结点进行分析
 		travelNode(node.getLinks().get(1));
-		MiddleCode.middleCodes.add(new MiddleCode(Instructions.JMP, "$false", null,firstSize-1));
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.JMP, "$false", null,firstSize));
 		int lastSize = MiddleCode.middleCodes.size();
 		MiddleCode.middleCodes.get(firstSize).setRes(lastSize);
 		

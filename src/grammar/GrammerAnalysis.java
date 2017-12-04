@@ -489,7 +489,7 @@ public class GrammerAnalysis {
 		word = nextWord();
 		switch (word.getType()) {
 		case STRING_VALUE:
-			node.addLink(new Node(NODE_TYPE.STRING, word.getValue()));
+			node.addLink(new Node(NODE_TYPE.STRING_VAL, word.getValue()));
 			break;
 		case INT_VALUE:
 		case REAL_VALUE:

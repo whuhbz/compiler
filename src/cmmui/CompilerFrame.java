@@ -43,6 +43,8 @@ import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.text.BadLocationException;
@@ -130,6 +132,9 @@ public class CompilerFrame extends JFrame {
 	public static boolean isReadyInput = false;
 	public static Execute.ExeIns ee = null;
 
+	//是否修改
+	private static boolean isEdited = false;
+	
 	public JTextArea treearea;
 	public static JTextArea Mcodearea;
 	/* 字体 */
@@ -275,6 +280,14 @@ public class CompilerFrame extends JFrame {
 				create(null);
 			}
 		});
+		editTabbedPane.addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				// TODO Auto-generated method stub
+				isEdited = true;
+			}
+		});
 		openItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				open();
@@ -290,6 +303,7 @@ public class CompilerFrame extends JFrame {
 				}
 			}
 		});
+		
 		exitItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.exit(0);
@@ -496,6 +510,13 @@ public class CompilerFrame extends JFrame {
 			return;
 		}
 		
+		commonSave();
+		
+		JOptionPane.showMessageDialog(this, "保存成功");
+		isEdited = false;
+	}
+	
+	private void commonSave() throws IOException {
 		String fileName = "srcFolder/" + editTabbedPane
 				.getTitleAt(editTabbedPane.getSelectedIndex());
 		File srcFile = new File(fileName);
@@ -503,8 +524,6 @@ public class CompilerFrame extends JFrame {
 		FileWriter fw = new FileWriter(srcFile);
 		fw.write(map.get(editTabbedPane.getSelectedComponent()).getText());
 		fw.close();
-		
-		JOptionPane.showMessageDialog(this, "保存成功");
 	}
 
 	// 撤销
@@ -588,6 +607,15 @@ public class CompilerFrame extends JFrame {
 	private void run() {
 		if(editTabbedPane.getSelectedIndex() == -1) {
 			return;
+		}
+		
+		if(isEdited) {
+			try {
+				commonSave();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		SymbolTable.symbolTable.clear();

@@ -10,10 +10,11 @@ import grammar.GrammerAnalysis;
 import grammar.SimpleTravel2;
 import grammar.TravelGrammarTree;
 import semantic.SemanticAnalysis;
+import system.MiddleCode;
 import system.Node;
 
 public class Main {
-	/*
+	
 	public static void main(String[] args) throws FileNotFoundException {
 		// 如果指定了输出文件路径
 		PrintStream newPs = null;
@@ -55,7 +56,11 @@ public class Main {
 			System.setOut(oldPs);
 
 			System.out.println("Done.");
+			for(MiddleCode middleCode: MiddleCode.middleCodes){
+				System.out.println(MiddleCode.middleCodes.indexOf(middleCode)+"\t"+middleCode.toString());
+			}
 		}
 
-	}*/
+	}
+
 }

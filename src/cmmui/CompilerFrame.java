@@ -123,7 +123,7 @@ public class CompilerFrame extends JFrame {
 	/* 查找次数 */
 	private static int time = 0;
 	/* 保存控制台用户的输入 */
-	private static String str1, str2;
+	private static String str1 = "", str2 = "";
 	public static String userInput = "";
 	public static boolean isReadyInput = false;
 	public static Execute.ExeIns ee = null;
@@ -132,7 +132,8 @@ public class CompilerFrame extends JFrame {
 	public JTextArea Mcodearea;
 	/* 字体 */
 	private Font editFont = new Font("微软雅黑", Font.PLAIN, 15);
-    public TreeNode treenode;
+	public TreeNode treenode;
+
 	public void initMenuBar() {
 		setLayout(null);
 		setJMenuBar(MENUBAR);
@@ -375,19 +376,19 @@ public class CompilerFrame extends JFrame {
 						} else {
 							userInput = str2.substring(str1.length());
 
-							if (userInput != null && !userInput.equals("")) {
-								isReadyInput = true;
-								synchronized(ee) {
-									notifyAll();
+						}
+
+						if (userInput != null && !userInput.trim().equals("")) {
+							isReadyInput = true;
+							if (ee != null) {
+								synchronized (ee) {
+									ee.notifyAll();
 								}
 							}
-							
 
 						}
-						//System.out.println(userInput);
-
 					} catch (Exception ex) {
-
+						ex.printStackTrace();
 					}
 				}
 				if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_Z) {
@@ -577,6 +578,7 @@ public class CompilerFrame extends JFrame {
 
 	// 运行函数
 	private void run() {
+		SymbolTable.symbolTable.clear();
 		consoleArea.setText(null);
 		String fileName = editTabbedPane
 				.getTitleAt(editTabbedPane.getSelectedIndex());
@@ -620,7 +622,6 @@ public class CompilerFrame extends JFrame {
 
 				Execute exe = new Execute(mcFile.getName());
 				new Thread(exe).start();
-				SymbolTable.symbolTable.clear();
 
 				for (MiddleCode mc : MiddleCode.middleCodes) {
 					System.out.println(mc);
@@ -633,12 +634,12 @@ public class CompilerFrame extends JFrame {
 				StyleConstants.setForeground(attr, Color.red);
 				try {
 					d.insertString(d.getLength(), me.getMessage(), attr);
+					consoleArea.setCaretPosition(d.getLength());
 				} catch (BadLocationException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}finally {
-				SymbolTable.symbolTable.clear();
+			} finally {
 				MiddleCode.middleCodes.clear();
 			}
 		}

@@ -434,12 +434,14 @@ public class MyExeIns implements Execute.ExeIns {
 		Variable v2V = exe.getVarible((String) v2);
 		String inStr = null;
 		CompilerFrame.isReadyInput = false;
+		CompilerFrame.ee = this;
 
 		if (!CompilerFrame.isReadyInput) {
 			synchronized (this) {
 				try {
 					wait();
 					inStr = CompilerFrame.userInput;
+					CompilerFrame.ee = null;
 					CompilerFrame.isReadyInput = false;
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
@@ -456,15 +458,15 @@ public class MyExeIns implements Execute.ExeIns {
 		NODE_TYPE type = v1V;
 		switch (type) {
 		case INT:
-			int inputInt = Integer.parseInt(inStr);
+			int inputInt = Integer.parseInt(inStr.trim());
 			exe.getVarible("$IN_INT").value = inputInt;
 			break;
 		case REAL:
-			double inputReal = Double.parseDouble(inStr);
+			double inputReal = Double.parseDouble(inStr.trim());
 			exe.getVarible("$IN_REAL").value = inputReal;
 			break;
 		case STRING:
-			String inputString = inStr;
+			String inputString = inStr.trim();
 			exe.getVarible("$IN_STRING").value = inputString;
 			break;
 		default:

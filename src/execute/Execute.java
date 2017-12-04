@@ -103,6 +103,8 @@ public class Execute implements Runnable{
 		while (counter < codeList.size()) {
 			exeIns.selectIns(this, codeList.get(counter));
 		}
+		
+		SymbolTable.symbolTable.clear();
 	}
 
 	/**

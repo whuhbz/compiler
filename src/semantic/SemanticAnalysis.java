@@ -1113,7 +1113,7 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			}
 
 		}
-		MiddleCode.middleCodes.add(new MiddleCode(Instructions.END, null, null, null));
+		MiddleCode.middleCodes.add(new MiddleCode(Instructions.END, arr_name, null, null));
 
 	}
 	

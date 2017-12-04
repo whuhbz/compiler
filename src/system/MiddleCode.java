@@ -42,4 +42,5 @@ public class MiddleCode implements Serializable{
 	public void setRes(Object res) {
 		this.res = res;
 	}
+	
 }

@@ -44,7 +44,7 @@ public class GrammerAnalysis {
 	 * @return 转换后的词
 	 */
 	private Word rc2Word(ReturnClass rc) {
-		if (rc == null) {
+		if (rc == null) { 
 			return null;
 		}
 		Word word = new Word();
@@ -667,10 +667,8 @@ public class GrammerAnalysis {
 		case PLUS:
 		case MINUS:
 		case LEFT_BRACKET:
-			node.addLink(oneArithmetic(word));
-			break;
 		case IDENTIFIER:
-			isArrElement(node, word);
+			node.addLink(oneArithmetic(word));
 			break;
 		default:
 			ThrowMyException.throwMyException(word, ErrorNum.ILLEGAL_LOGIC_EXP);

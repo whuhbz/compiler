@@ -6,7 +6,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -241,14 +243,23 @@ public class WordAnalysis {
 	 */
 	private class StringDFA {
 		private Set<Character> escapes;
+		private Map<String, String> escMap;
 		private StringBuffer sb;
 
 		public StringDFA() {
 			super();
 			escapes = new HashSet<Character>();
-			escapes.addAll(Arrays.asList('"', '\\', '/', 'b', 'f', 'n', 'r',
-					't', 'u'));
-			sb = new StringBuffer("\"");
+			escapes.addAll(Arrays.asList('"', '\\', 'b', 'f', 'n', 'r',
+					't'));
+			escMap = new HashMap<String, String>();
+			escMap.put("\"", "\"");
+			escMap.put("\\", "\\");
+			escMap.put("b", "\b");
+			escMap.put("f", "\f");
+			escMap.put("n", "\n");
+			escMap.put("r", "\r");
+			escMap.put("t", "\t");
+			sb = new StringBuffer("");
 		}
 
 		private StringDFAState nowState = StringDFAState.BEGIN_QUOTES;
@@ -269,10 +280,8 @@ public class WordAnalysis {
 				case AFETER_LEGAL_CHAR:
 					if (ch == 92) { // 读到反斜�?
 						nowState = StringDFAState.AFTER_SPRIT;
-						sb.append(ch);
 					} else if (ch == 34) { // 读到双引�?
 						nowState = StringDFAState.END_QUOTES;
-						sb.append(ch);
 					} else {
 						nowState = StringDFAState.AFETER_LEGAL_CHAR;
 						sb.append(ch);
@@ -281,7 +290,7 @@ public class WordAnalysis {
 				case AFTER_SPRIT:
 					if (escapes.contains(ch)) {
 						nowState = StringDFAState.AFETER_LEGAL_CHAR;
-						sb.append(ch);
+						sb.append(escMap.get(String.valueOf(ch)));
 					} else {
 						// 非法转义�?
 						sb.append(ch);

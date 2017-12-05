@@ -114,7 +114,7 @@ public class CompilerFrame extends JFrame {
 	/* 查找次数 */
 	private static int time = 0;
 	/* 保存控制台用户的输入 */
-	private static String str1 = "", str2 = "";
+	public static String str1 = "", str2 = "";
 	public static String userInput = "";
 	public static boolean isReadyInput = false;
 	public static Execute.ExeIns ee = null;

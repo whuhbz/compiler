@@ -144,6 +144,10 @@ public class MyExeIns implements Execute.ExeIns {
 
 		if (v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
 			resV.value = (Integer) (v1V.value) + (Integer) (v2V.value);
+		} else if (v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			resV.value = (Integer) (v1V.value) + (Double) (v2V.value);
+		} else if (v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			resV.value = (Double) (v1V.value) + (Integer) (v2V.value);
 		} else {
 			resV.value = (Double) (v1V.value) + (Double) (v2V.value);
 		}
@@ -159,6 +163,10 @@ public class MyExeIns implements Execute.ExeIns {
 
 		if (v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
 			resV.value = (Integer) (v1V.value) - (Integer) (v2V.value);
+		} else if (v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			resV.value = (Integer) (v1V.value) - (Double) (v2V.value);
+		} else if (v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			resV.value = (Double) (v1V.value) - (Integer) (v2V.value);
 		} else {
 			resV.value = (Double) (v1V.value) - (Double) (v2V.value);
 		}
@@ -174,6 +182,10 @@ public class MyExeIns implements Execute.ExeIns {
 
 		if (v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
 			resV.value = (Integer) (v1V.value) * (Integer) (v2V.value);
+		} else if (v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			resV.value = (Integer) (v1V.value) * (Double) (v2V.value);
+		} else if (v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			resV.value = (Double) (v1V.value) * (Integer) (v2V.value);
 		} else {
 			resV.value = (Double) (v1V.value) * (Double) (v2V.value);
 		}
@@ -187,12 +199,23 @@ public class MyExeIns implements Execute.ExeIns {
 		Variable v2V = exe.getVarible((String) v2);
 		Variable resV = exe.getVarible((String) res);
 
-		if ((Double) (v2V.value) == 0.0) {
-			throw new RuntimeException();
+		if (v2V.type == NODE_TYPE.INT) {
+			if(((Integer)v2V.value) == 0) {
+				throw new RuntimeException();
+			}
+			
+		}else {
+			if(((Double)v2V.value) == 0.0) {
+				throw new RuntimeException();
+			}
 		}
 
 		if (v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.INT) {
 			resV.value = (Integer) (v1V.value) / (Integer) (v2V.value);
+		} else if (v1V.type == NODE_TYPE.INT && v2V.type == NODE_TYPE.REAL) {
+			resV.value = (Integer) (v1V.value) / (Double) (v2V.value);
+		} else if (v1V.type == NODE_TYPE.REAL && v2V.type == NODE_TYPE.INT) {
+			resV.value = (Double) (v1V.value) / (Integer) (v2V.value);
 		} else {
 			resV.value = (Double) (v1V.value) / (Double) (v2V.value);
 		}
@@ -419,6 +442,7 @@ public class MyExeIns implements Execute.ExeIns {
 			CompilerFrame.frame.d.insertString(
 					CompilerFrame.frame.d.getLength(), v1V.value.toString(),
 					attr);
+			CompilerFrame.frame.str2 = v1V.value.toString();
 			CompilerFrame.frame.consoleArea.setCaretPosition(CompilerFrame.frame.d.getLength());
 		} catch (BadLocationException e1) {
 			// TODO Auto-generated catch block

@@ -643,13 +643,20 @@ public class SemanticAnalysis implements TravelGrammarTree{
 			NODE_TYPE child_type1 = null,child_type2 = null;
 			child_type1 = child_arithmetic(childs.get(0));
 			child_type2 = child_arithmetic(childs.get(1));
+			if(child_type1==NODE_TYPE.INT&&child_type2==NODE_TYPE.INT){
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.INT, getArithmeticName(ari_node), null));
+			}else /*if((child_type1==NODE_TYPE.INT&&child_type2==NODE_TYPE.REAL)
+					||(child_type1==NODE_TYPE.INT&&child_type2==NODE_TYPE.REAL)
+					||(child_type1==NODE_TYPE.REAL||child_type2==NODE_TYPE.REAL))*/{
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL, getArithmeticName(ari_node), null));
+			}
 			
 			getChildValue(childs.get(0));
 			getChildValue(childs.get(1));
 			String pattern = "[a-zA-Z][a-zA-Z0-9]*";
 			String name1 = getChildArithmeticElementName(childs.get(0));
 			String name2 = getChildArithmeticElementName(childs.get(1));
-			MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL, getArithmeticName(ari_node), null));
+
 			if(!Pattern.matches(pattern, name1)) name1 = "$"+name1;
 			if(!Pattern.matches(pattern, name2)) name2 = "$"+name2;
 			
@@ -726,15 +733,27 @@ public class SemanticAnalysis implements TravelGrammarTree{
 		case ARI_OPERATOR:
 			//获取操作运算符的两个表达式子式
 			List<Node> childs = root.getLinks();
-			getChildValue(childs.get(0));
-			getChildValue(childs.get(1));
+
 			
 			String pattern = "[a-zA-Z][a-zA-Z0-9]*";
 			String name1 = getChildArithmeticElementName(childs.get(0));
 			String name2 = getChildArithmeticElementName(childs.get(1));
+		
+			//两个表达式子式的数据类型
+			NODE_TYPE child_type1 = null,child_type2 = null;
+			child_type1 = child_arithmetic(childs.get(0));
+			child_type2 = child_arithmetic(childs.get(1));
+			if(child_type1==NODE_TYPE.INT&&child_type2==NODE_TYPE.INT){
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.INT, "$"+name1+root.getValue()+name2, null));
+			}else {			
+				MiddleCode.middleCodes.add(new MiddleCode(Instructions.DEC, NODE_TYPE.REAL,"$"+name1+root.getValue()+name2, null));
+
+			}
+			
+			getChildValue(childs.get(0));
+			getChildValue(childs.get(1));
 			if(!Pattern.matches(pattern, name1)) name1 = "$"+name1;
 			if(!Pattern.matches(pattern, name2)) name2 = "$"+name2;
-			
 			switch (root.getValue()) {
 			case "+":
 				MiddleCode.middleCodes.add(new MiddleCode(Instructions.ADD, name1, name2, "$"+getChildArithmeticElementName(childs.get(0))+ root.getValue() +getChildArithmeticElementName(childs.get(1))));
